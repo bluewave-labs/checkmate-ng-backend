@@ -1,0 +1,34 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon --exec tsx src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/cookie-parser": "1.4.9",
+    "@types/node": "24.7.1",
+    "@types/nodemailer": "7.0.2",
+    "nodemon": "3.1.10",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "bcryptjs": "3.0.2",
+    "cookie-parser": "1.4.7",
+    "dotenv": "17.2.3",
+    "express": "5.1.0",
+    "got": "14.5.0",
+    "jsonwebtoken": "9.0.2",
+    "mongoose": "8.19.1",
+    "nodemailer": "7.0.9",
+    "ping": "1.0.0",
+    "super-simple-scheduler": "1.4.1"
+  }
+}

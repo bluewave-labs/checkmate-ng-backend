@@ -1,0 +1,30 @@
+import {
+  AuthController,
+  InviteController,
+  MaintenanceController,
+  MonitorController,
+  NotificationChannelController,
+  QueueController,
+} from "@/controllers/index.js";
+
+export const initControllers = (services: any) => {
+  const controllers: Record<string, any> = {};
+
+  controllers.authController = new AuthController(
+    services.authService,
+    services.inviteService
+  );
+  controllers.inviteController = new InviteController(services.inviteService);
+  controllers.maintenanceController = new MaintenanceController(
+    services.maintenanceService
+  );
+  controllers.monitorController = new MonitorController(
+    services.monitorService,
+    services.checkService
+  );
+  controllers.notificationChannelController = new NotificationChannelController(
+    services.notificationChannelService
+  );
+  controllers.queueController = new QueueController(services.jobQueue);
+  return controllers;
+};
