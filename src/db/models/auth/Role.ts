@@ -9,7 +9,6 @@ export interface IRole extends Document {
   name: string;
   scope: ScopeType;
   permissions: string[];
-
   createdAt: Date;
   updatedAt: Date;
 }

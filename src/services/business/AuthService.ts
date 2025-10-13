@@ -184,7 +184,7 @@ class AuthService implements IAuthService {
         sub: user._id.toString(),
         email: user.email,
         orgId: org._id.toString(),
-        teamId: team._id.toString(),
+        teamIds: [team._id.toString()],
       };
     } catch (error) {
       await TeamMembership.deleteMany({ _id: { $in: created.memberships } });
@@ -212,23 +212,32 @@ class AuthService implements IAuthService {
     const user = await User.findOne({ email });
 
     if (!user) {
-      throw new Error("Invalid email or password");
+      throw new ApiError("Invalid email or password");
     }
 
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new Error("Invalid email or password");
+      throw new ApiError("Invalid email or password");
+    }
+
+    // Find OrgMembership
+    const orgMembership = await OrgMembership.findOne({ userId: user._id });
+    if (!orgMembership) {
+      throw new ApiError("User is not part of any organization");
+    }
+
+    // Find TeamMembership
+    const teamMemberships = await TeamMembership.find({ userId: user._id });
+    if (!teamMemberships) {
+      throw new ApiError("User is not part of any team");
     }
 
     return {
       sub: user._id.toString(),
       email: user.email,
-      orgId: "REPLACE_ME",
-      teamId: "REPLACE_ME",
-      role: "REPLACE_ME",
-      iat: 1,
-      exp: 1,
+      orgId: orgMembership.orgId.toString(),
+      teamIds: teamMemberships.map((tm) => tm.teamId.toString()),
     };
   }
 

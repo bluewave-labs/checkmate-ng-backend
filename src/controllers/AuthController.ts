@@ -23,14 +23,17 @@ class AuthController {
         );
       }
 
-      await this.authService.register({ email, firstName, lastName, password });
+      const result = await this.authService.register({
+        email,
+        firstName,
+        lastName,
+        password,
+      });
 
-      const result: ITokenizedUser = {
-        sub: "REPLACE_ME",
-        email: "REPLACE_ME",
-        orgId: "REPLACE_ME",
-        teamId: "REPLACE_ME",
-      };
+      if (!result) {
+        throw new ApiError("Registration failed");
+      }
+
       const token = encode(result);
 
       res.cookie("token", token, {
@@ -65,26 +68,7 @@ class AuthController {
       const email = invite?.email;
       const roles = invite?.roles;
 
-      if (
-        !email ||
-        !firstName ||
-        !lastName ||
-        !password ||
-        !roles ||
-        roles.length === 0
-      ) {
-        throw new Error(
-          "Email, firstName, lastName, password, and roles are required"
-        );
-      }
-
-      const result = await this.authService.registerWithInvite({
-        email,
-        firstName,
-        lastName,
-        password,
-        roles,
-      });
+      const result = "REPLACE_ME";
 
       if (!result) {
         throw new Error("Registration failed");
@@ -117,7 +101,6 @@ class AuthController {
           .json({ message: "Email and password are required" });
       }
       const result = await this.authService.login({ email, password });
-
       const token = encode(result);
 
       res.cookie("token", token, {

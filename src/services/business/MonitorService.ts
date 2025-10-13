@@ -55,7 +55,7 @@ class MonitorService implements IMonitorService {
     const monitorLiteral: Partial<IMonitor> = {
       ...monitorData,
       orgId: new mongoose.Types.ObjectId(tokenizedUser.orgId),
-      teamId: new mongoose.Types.ObjectId(tokenizedUser.teamId),
+      teamId: new mongoose.Types.ObjectId(tokenizedUser.currentTeamId),
       createdBy: new mongoose.Types.ObjectId(tokenizedUser.sub),
       updatedBy: new mongoose.Types.ObjectId(tokenizedUser.sub),
     };

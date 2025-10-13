@@ -79,13 +79,13 @@ class CheckService implements ICheckService {
   private buildBaseCheck = (statusResponse: StatusResponse) => {
     const monitorId = new mongoose.Types.ObjectId(statusResponse.monitorId);
     const checkData: Partial<ICheck> = {
-      meta: {
+      metadata: {
         monitorId: monitorId,
         type: statusResponse?.type,
-        status: statusResponse?.status,
-        httpStatusCode: statusResponse?.code,
-        ack: false,
       },
+      status: statusResponse?.status,
+      httpStatusCode: statusResponse?.code,
+      ack: false,
       message: statusResponse?.message,
       responseTime: statusResponse?.responseTime,
       timings: statusResponse?.timings,

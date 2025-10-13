@@ -2,6 +2,8 @@ import { Router } from "express";
 import { MonitorController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
 import { verifyPermission } from "@/middleware/VerifyPermissions.js";
+import { addUserContext } from "@/middleware/AddUserContext.js";
+import { PERMISSIONS } from "@/services/business/AuthService.js";
 
 class MonitorRoutes {
   private router;
@@ -16,49 +18,51 @@ class MonitorRoutes {
     this.router.post(
       "/",
       verifyToken,
-      verifyPermission(["monitors.create"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.monitors.write]),
       this.controller.create
     );
 
     this.router.get(
       "/",
       verifyToken,
-      verifyPermission(["monitors.view"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.monitors.read]),
       this.controller.getAll
     );
 
     this.router.get(
       "/:id/checks",
       verifyToken,
-      verifyPermission(["monitors.view"]),
+      verifyPermission([PERMISSIONS.monitors.read]),
       this.controller.getChecks
     );
 
     this.router.patch(
       "/:id/active",
       verifyToken,
-      verifyPermission(["monitors.update"]),
+      verifyPermission([PERMISSIONS.monitors.write]),
       this.controller.toggleActive
     );
 
     this.router.get(
       "/:id",
       verifyToken,
-      verifyPermission(["monitors.view"]),
+      verifyPermission([PERMISSIONS.monitors.read]),
       this.controller.get
     );
 
     this.router.patch(
       "/:id",
       verifyToken,
-      verifyPermission(["monitors.update"]),
+      verifyPermission([PERMISSIONS.monitors.write]),
       this.controller.update
     );
 
     this.router.delete(
       "/:id",
       verifyToken,
-      verifyPermission(["monitors.delete"]),
+      verifyPermission([PERMISSIONS.monitors.delete]),
       this.controller.delete
     );
   };

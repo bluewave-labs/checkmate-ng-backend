@@ -1,12 +1,19 @@
 import { Request, Response, NextFunction } from "express";
 
-import {
-  OrgMembership,
-  TeamMembership,
-  Role,
-  IRole,
-} from "@/db/models/index.js";
+import { OrgMembership, TeamMembership, IRole } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
+
+interface IRolesObj {
+  orgRole: IRole;
+  teamRole: IRole;
+}
+interface IRolesCacheData {
+  data: IRolesObj;
+  expiresAt: number;
+}
+
+const CACHE_TTL = 5 * 60 * 1000;
+const rolesCache = new Map<string, IRolesCacheData>();
 
 export const addUserContext = async (
   req: Request,
@@ -18,34 +25,62 @@ export const addUserContext = async (
       throw new ApiError("User not authenticated", 401);
     }
 
-    const { sub, orgId, teamId } = req.user;
-    if (!sub || !orgId || !teamId) {
-      throw new ApiError("Invalid user context");
+    const { sub, orgId, teamIds } = req.user;
+
+    const currentTeamId = req.headers["x-team-id"] as string;
+
+    if (!sub || !orgId || !teamIds || teamIds.length === 0 || !currentTeamId) {
+      throw new ApiError("Invalid user context", 400);
     }
 
-    const [orgMembership, teamMembership] = await Promise.all([
-      OrgMembership.findOne({ userId: sub, orgId }),
-      TeamMembership.findOne({ userId: sub, teamId }),
+    if (!teamIds.includes(currentTeamId)) {
+      throw new ApiError("User does not belong to the specified team", 403);
+    }
+
+    const cacheKey = `${sub}:${orgId}:${currentTeamId}`;
+    const cached = rolesCache.get(cacheKey);
+
+    if (cached && cached.expiresAt > Date.now()) {
+      req.user.roles = cached.data;
+      return next();
+    } else if (cached && cached.expiresAt <= Date.now()) {
+      rolesCache.delete(cacheKey);
+    }
+
+    const [orgRole, teamRole] = await Promise.all([
+      OrgMembership.findOne({ userId: sub, orgId })
+        .populate<{ roleId: IRole }>("roleId")
+        .select("roleId")
+        .lean(),
+
+      TeamMembership.findOne({ userId: sub, teamId: currentTeamId })
+        .populate<{ roleId: IRole }>("roleId")
+        .select("roleId")
+        .lean(),
     ]);
 
-    if (!orgMembership || !teamMembership) {
-      throw new ApiError("Membership not found");
+    if (!orgRole || !orgRole.roleId) {
+      throw new ApiError("User has no role in the organization", 403);
+    }
+    if (!teamRole || !teamRole.roleId) {
+      throw new ApiError("User has no role in the team", 403);
     }
 
-    const orgRoleId = orgMembership?.roleId || null;
-    const teamRoleId = teamMembership?.roleId || null;
+    rolesCache.set(cacheKey, {
+      data: {
+        orgRole: orgRole.roleId,
+        teamRole: teamRole.roleId,
+      },
+      expiresAt: Date.now() + CACHE_TTL,
+    });
 
-    const orgRole = await Role.findById(orgRoleId);
-    const teamRole = await Role.findById(teamRoleId);
-
-    if (!orgRole || !teamRole) {
-      throw new ApiError("Role not found");
-    }
-
+    req.user.currentTeamId = currentTeamId;
     req.user.roles = {
-      orgRole: orgRole,
-      teamRole: teamRole,
+      orgRole: orgRole.roleId,
+      teamRole: teamRole.roleId,
     };
+
+    next();
   } catch (error) {
     next(error);
   }
