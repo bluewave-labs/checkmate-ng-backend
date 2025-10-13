@@ -34,6 +34,7 @@ class MonitorRoutes {
     this.router.get(
       "/:id/checks",
       verifyToken,
+      addUserContext,
       verifyPermission([PERMISSIONS.monitors.read]),
       this.controller.getChecks
     );
@@ -41,6 +42,7 @@ class MonitorRoutes {
     this.router.patch(
       "/:id/active",
       verifyToken,
+      addUserContext,
       verifyPermission([PERMISSIONS.monitors.write]),
       this.controller.toggleActive
     );
@@ -48,6 +50,7 @@ class MonitorRoutes {
     this.router.get(
       "/:id",
       verifyToken,
+      addUserContext,
       verifyPermission([PERMISSIONS.monitors.read]),
       this.controller.get
     );
@@ -55,6 +58,7 @@ class MonitorRoutes {
     this.router.patch(
       "/:id",
       verifyToken,
+      addUserContext,
       verifyPermission([PERMISSIONS.monitors.write]),
       this.controller.update
     );
@@ -62,6 +66,7 @@ class MonitorRoutes {
     this.router.delete(
       "/:id",
       verifyToken,
+      addUserContext,
       verifyPermission([PERMISSIONS.monitors.delete]),
       this.controller.delete
     );

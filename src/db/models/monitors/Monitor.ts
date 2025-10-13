@@ -95,7 +95,7 @@ MonitorSchema.pre(
   async function (next) {
     try {
       const monitorId = this._id;
-      await Check.deleteMany({ monitorId });
+      await Check.deleteMany({ "metadata.monitorId": monitorId });
       await MonitorStats.deleteMany({ monitorId });
       next();
     } catch (error: any) {

@@ -161,7 +161,7 @@ class CheckService implements ICheckService {
     try {
       const monitorIds = await Monitor.find().distinct("_id");
       const result = await Check.deleteMany({
-        monitorId: { $nin: monitorIds },
+        "metadata.monitorId": { $nin: monitorIds },
       });
       console.log(`Deleted ${result.deletedCount} orphaned Checks.`);
       return true;
@@ -173,10 +173,11 @@ class CheckService implements ICheckService {
 
   getChecks = async (monitorId: string, page: number, rowsPerPage: number) => {
     const count = await Check.countDocuments({
-      monitorId: new mongoose.Types.ObjectId(monitorId),
+      "metadata.monitorId": new mongoose.Types.ObjectId(monitorId),
     });
+
     const checks = await Check.find({
-      monitorId: new mongoose.Types.ObjectId(monitorId),
+      "metadata.monitorId": new mongoose.Types.ObjectId(monitorId),
     })
       .sort({ createdAt: -1 })
       .skip(page * rowsPerPage)

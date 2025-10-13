@@ -364,11 +364,11 @@ class MonitorService implements IMonitorService {
 
     // Build match stage
     const matchStage: {
-      monitorId: mongoose.Types.ObjectId;
+      "metadata.monitorId": mongoose.Types.ObjectId;
       createdAt: { $gte: Date };
       status?: string;
     } = {
-      monitorId: monitor._id,
+      "metadata.monitorId": monitor._id,
       createdAt: { $gte: startDate },
     };
 
