@@ -20,6 +20,18 @@ class InviteService implements IInviteService {
   }
 
   create = async (tokenizedUser: ITokenizedUser, inviteData: IInvite) => {
+    // Step 1:  Check Org and Team with user context
+    const inviterOrgId = tokenizedUser.orgId;
+    const teamIds = tokenizedUser.teamIds || [];
+
+    if (inviterOrgId !== inviteData.orgId.toString()) {
+      throw new ApiError("Cannot invite user to different organization", 403);
+    }
+
+    if (!teamIds.includes(inviteData.teamId.toString())) {
+      throw new ApiError("Cannot invite user to team you are not part of", 403);
+    }
+
     const token = crypto.randomBytes(32).toString("hex");
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
     try {

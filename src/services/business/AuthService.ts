@@ -2,8 +2,10 @@ import bcrypt from "bcryptjs";
 import {
   User,
   Org,
+  IOrgMembership,
   OrgMembership,
   Team,
+  ITeamMembership,
   TeamMembership,
   Role,
   IUser,
@@ -11,12 +13,14 @@ import {
   Monitor,
   Check,
   NotificationChannel,
+  IInvite,
 } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { IJobQueue } from "../infrastructure/JobQueue.js";
 import { sign } from "crypto";
 import { hashPassword } from "@/utils/JWTUtils.js";
+import { create } from "domain";
 
 const SERVICE_NAME = "AuthServiceV2";
 
@@ -48,6 +52,12 @@ export const PERMISSIONS = {
     read: "maintenance.read",
     update: "maintenance.update",
     delete: "maintenance.delete",
+  },
+  invite: {
+    all: "invite.*",
+    write: "invite.write",
+    read: "invite.read",
+    delete: "invite.delete",
   },
   checks: {
     all: "checks.*",
@@ -81,7 +91,10 @@ export type AuthResult = ITokenizedUser;
 
 export interface IAuthService {
   register(signupData: RegisterData): Promise<ITokenizedUser>;
-  registerWithInvite(signupData: RegisterData): Promise<ITokenizedUser>;
+  registerWithInvite(
+    invite: IInvite,
+    signupData: RegisterData
+  ): Promise<ITokenizedUser>;
   login(loginData: LoginData): Promise<ITokenizedUser>;
   cleanup(): Promise<void>;
   cleanMonitors(): Promise<void>;
@@ -203,13 +216,110 @@ class AuthService implements IAuthService {
     }
   }
 
-  async registerWithInvite(signupData: RegisterData): Promise<ITokenizedUser> {
-    return {
-      sub: "REPLACE_ME",
-      email: "REPLACE_ME",
-      orgId: "REPLACE_ME",
-      teamId: "REPLACE_ME",
+  async registerWithInvite(
+    invite: IInvite,
+    signupData: RegisterData
+  ): Promise<ITokenizedUser> {
+    const created: Record<string, any> = {
+      user: null,
+      orgMembership: null,
+      teamMembership: null,
     };
+
+    try {
+      const { orgId, orgRole, teamId, teamRole, email, expiry } = invite;
+
+      if (expiry < new Date()) {
+        throw new ApiError("Invite token has expired", 400);
+      }
+
+      let user = null;
+      let orgMembership = null;
+      let teamMemberships = null;
+
+      user = await User.findOne({ email });
+
+      if (user) {
+        orgMembership = await OrgMembership.findOne({
+          userId: user._id,
+          orgId,
+        });
+        if (!orgMembership) {
+          throw new ApiError(
+            "User already exists but does not belong to the organization they are being invited to",
+            400
+          );
+        }
+
+        if (orgRole) {
+          await OrgMembership.updateOne(
+            { _id: orgMembership._id },
+            { roleId: orgRole }
+          );
+        }
+
+        teamMemberships = await TeamMembership.find({ userId: user._id });
+        if (
+          !teamMemberships.some(
+            (tm) => tm.teamId.toString() === teamId.toString()
+          )
+        ) {
+          const newTeamMembership = await TeamMembership.create({
+            userId: user._id,
+            teamId,
+            roleId: teamRole,
+          });
+          created.teamMembership = newTeamMembership._id;
+          teamMemberships.push(newTeamMembership);
+        }
+      } else {
+        // Create a new user
+        const passwordHash = await hashPassword(signupData.password);
+        const newUserData: Partial<IUser> = {
+          firstName: signupData.firstName,
+          lastName: signupData.lastName,
+          email,
+          passwordHash,
+        };
+        user = await User.create(newUserData);
+        created.user = user._id;
+
+        // Create orgMembership
+        const newOrgMembership = await OrgMembership.create({
+          userId: user._id,
+          orgId,
+          roleId: orgRole,
+        });
+        created.orgMembership = newOrgMembership._id;
+
+        // Create teamMembership
+        const newTeamMembership = await TeamMembership.create({
+          userId: user._id,
+          teamId,
+          roleId: teamRole,
+        });
+        created.teamMembership = newTeamMembership._id;
+        teamMemberships = [newTeamMembership];
+      }
+
+      return {
+        sub: user._id.toString(),
+        email: user.email,
+        orgId: orgId.toString(),
+        teamIds: teamMemberships.map((tm) => tm.teamId.toString()),
+      };
+    } catch (error) {
+      if (created.orgMembership) {
+        await OrgMembership.deleteOne({ _id: created.orgMembership });
+      }
+      if (created.teamMembership) {
+        await TeamMembership.deleteOne({ _id: created.teamMembership });
+      }
+      if (created.user) {
+        await User.findByIdAndDelete(created.user);
+      }
+      throw error;
+    }
   }
 
   async login(loginData: LoginData): Promise<ITokenizedUser> {

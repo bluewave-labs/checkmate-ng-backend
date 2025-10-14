@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import InviteService from "@/services/business/InviteService.js";
+import ApiError from "@/utils/ApiError.js";
 
 class InviteController {
   private inviteService: InviteService;
@@ -13,6 +14,7 @@ class InviteController {
       if (!tokenizedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
+
       const invite = await this.inviteService.create(tokenizedUser, req.body);
       res.status(201).json({ message: "OK", data: invite });
     } catch (error: any) {

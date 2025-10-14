@@ -62,13 +62,11 @@ class AuthController {
         throw new ApiError("Invite token is required", 400);
       }
 
-      const invite: IInvite = await this.inviteService.get(token);
-
-      const { firstName, lastName, password } = req.body;
-      const email = invite?.email;
-      const roles = invite?.roles;
-
-      const result = "REPLACE_ME";
+      const invite = await this.inviteService.get(token);
+      const result = await this.authService.registerWithInvite(
+        invite,
+        req.body
+      );
 
       if (!result) {
         throw new Error("Registration failed");

@@ -2,6 +2,8 @@ import { Router } from "express";
 import { InviteController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
 import { verifyPermission } from "@/middleware/VerifyPermissions.js";
+import { addUserContext } from "@/middleware/AddUserContext.js";
+import { PERMISSIONS } from "@/services/business/AuthService.js";
 
 class InviteRoutes {
   private router;
@@ -16,28 +18,32 @@ class InviteRoutes {
     this.router.post(
       "/",
       verifyToken,
-      verifyPermission(["invite.create"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.invite.write]),
       this.controller.create
     );
 
     this.router.get(
       "/",
       verifyToken,
-      verifyPermission(["invite.view"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.invite.read]),
       this.controller.getAll
     );
 
     this.router.get(
       "/:token",
       verifyToken,
-      verifyPermission(["invite.view"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.invite.read]),
       this.controller.get
     );
 
     this.router.delete(
       "/:id",
       verifyToken,
-      verifyPermission(["invite.delete"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.invite.delete]),
       this.controller.delete
     );
   };
