@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import NotificationService from "@/services/business/NotificationChannelService.js";
-
+import ApiError from "@/utils/ApiError.js";
 class NotificationChannelController {
   private notificationService: NotificationService;
   constructor(notificationService: NotificationService) {
@@ -25,7 +25,19 @@ class NotificationChannelController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const notificationChannels = await this.notificationService.getAll();
+      const tokenizedUser = req.user;
+      if (!tokenizedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
+      const notificationChannels = await this.notificationService.getAll(
+        teamId
+      );
       res.status(200).json({
         message: "OK",
         data: notificationChannels,
@@ -41,11 +53,18 @@ class NotificationChannelController {
       if (!tokenizedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const id = req.params.id;
       if (!id) {
         return res.status(400).json({ message: "ID parameter is required" });
       }
       const notificationChannel = await this.notificationService.toggleActive(
+        teamId,
         tokenizedUser,
         id
       );
@@ -61,11 +80,18 @@ class NotificationChannelController {
       if (!tokenizedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const id = req.params.id;
       if (!id) {
         return res.status(400).json({ message: "ID parameter is required" });
       }
       const updatedChannel = await this.notificationService.update(
+        teamId,
         tokenizedUser,
         id,
         req.body
@@ -78,11 +104,24 @@ class NotificationChannelController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const tokenizedUser = req.user;
+      if (!tokenizedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const id = req.params.id;
       if (!id) {
         return res.status(400).json({ message: "ID parameter is required" });
       }
-      const notificationChannel = await this.notificationService.get(id);
+      const notificationChannel = await this.notificationService.get(
+        teamId,
+        id
+      );
       res.status(200).json({ message: "OK", data: notificationChannel });
     } catch (error) {
       next(error);
@@ -91,11 +130,21 @@ class NotificationChannelController {
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const tokenizedUser = req.user;
+      if (!tokenizedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const id = req.params.id;
       if (!id) {
         return res.status(400).json({ message: "ID parameter is required" });
       }
-      await this.notificationService.delete(id);
+      await this.notificationService.delete(teamId, id);
       res.status(204).json({ message: "OK" });
     } catch (error) {
       next(error);

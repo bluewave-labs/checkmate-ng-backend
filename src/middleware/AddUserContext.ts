@@ -42,6 +42,7 @@ export const addUserContext = async (
 
     if (cached && cached.expiresAt > Date.now()) {
       req.user.roles = cached.data;
+      req.user.currentTeamId = currentTeamId;
       return next();
     } else if (cached && cached.expiresAt <= Date.now()) {
       rolesCache.delete(cacheKey);

@@ -2,7 +2,8 @@ import { Router } from "express";
 import { NotificationChannelController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
 import { verifyPermission } from "@/middleware/VerifyPermissions.js";
-
+import { addUserContext } from "@/middleware/AddUserContext.js";
+import { PERMISSIONS } from "@/services/business/AuthService.js";
 class NotificationChannelRoutes {
   private router;
   private controller;
@@ -16,42 +17,48 @@ class NotificationChannelRoutes {
     this.router.post(
       "/",
       verifyToken,
-      verifyPermission(["notifications.create"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.notifications.write]),
       this.controller.create
     );
 
     this.router.get(
       "/",
       verifyToken,
-      verifyPermission(["notifications.view"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.notifications.read]),
       this.controller.getAll
     );
 
     this.router.patch(
       "/:id/active",
       verifyToken,
-      verifyPermission(["notifications.update"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.notifications.write]),
       this.controller.toggleActive
     );
 
     this.router.patch(
       "/:id",
       verifyToken,
-      verifyPermission(["notifications.update"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.notifications.update]),
       this.controller.update
     );
 
     this.router.get(
       "/:id",
       verifyToken,
-      verifyPermission(["notifications.view"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.notifications.read]),
       this.controller.get
     );
 
     this.router.delete(
       "/:id",
       verifyToken,
-      verifyPermission(["notifications.delete"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.notifications.delete]),
       this.controller.delete
     );
   };

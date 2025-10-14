@@ -19,28 +19,32 @@ export interface IMonitorService {
     tokenizedUser: ITokenizedUser,
     monitorData: IMonitor
   ) => Promise<IMonitor>;
-  getAll: () => Promise<IMonitor[]>;
+  getAll: (teamId: string) => Promise<IMonitor[]>;
   getAllEmbedChecks: (
+    teamId: string,
     page: number,
     limit: number,
     type: MonitorType[]
   ) => Promise<any[]>;
-  get: (monitorId: string) => Promise<IMonitor>;
+  get: (teamId: string, monitorId: string) => Promise<IMonitor>;
   getEmbedChecks: (
+    teamId: string,
     monitorId: string,
     range: string,
     status?: string
   ) => Promise<MonitorWithChecksResponse>;
   toggleActive: (
+    teamId: string,
     monitorId: string,
     tokenizedUser: ITokenizedUser
   ) => Promise<IMonitor>;
   update: (
+    teamId: string,
     tokenizedUser: ITokenizedUser,
     monitorId: string,
     updateData: Partial<IMonitor>
   ) => Promise<IMonitor>;
-  delete: (monitorId: string) => Promise<boolean>;
+  delete: (teamId: string, monitorId: string) => Promise<boolean>;
 }
 
 class MonitorService implements IMonitorService {
@@ -69,11 +73,12 @@ class MonitorService implements IMonitorService {
     return monitor;
   };
 
-  getAll = async () => {
-    return Monitor.find();
+  getAll = async (teamId: string) => {
+    return Monitor.find({ teamId });
   };
 
   getAllEmbedChecks = async (
+    teamId: string,
     page: number,
     limit: number,
     type: MonitorType[] = []
@@ -81,12 +86,13 @@ class MonitorService implements IMonitorService {
     const skip = (page - 1) * limit;
     let find = {};
     if (type.length > 0) find = { type: { $in: type } };
+    find = { ...find, teamId };
     const monitors = await Monitor.find(find).skip(skip).limit(limit);
     return monitors;
   };
 
-  get = async (monitorId: string) => {
-    const monitor = await Monitor.findById(monitorId);
+  get = async (teamId: string, monitorId: string) => {
+    const monitor = await Monitor.findOne({ _id: monitorId, teamId });
     if (!monitor) {
       throw new ApiError("Monitor not found", 404);
     }
@@ -351,11 +357,12 @@ class MonitorService implements IMonitorService {
   };
 
   getEmbedChecks = async (
+    teamId: string,
     monitorId: string,
     range: string,
     status: string | undefined
   ): Promise<MonitorWithChecksResponse> => {
-    const monitor = await Monitor.findById(monitorId);
+    const monitor = await Monitor.findOne({ _id: monitorId, teamId });
     if (!monitor) {
       throw new ApiError("Monitor not found", 404);
     }
@@ -431,10 +438,14 @@ class MonitorService implements IMonitorService {
     };
   };
 
-  async toggleActive(id: string, tokenizedUser: ITokenizedUser) {
+  async toggleActive(
+    teamId: string,
+    id: string,
+    tokenizedUser: ITokenizedUser
+  ) {
     const pendingStatus: MonitorStatus = "initializing";
     const updatedMonitor = await Monitor.findOneAndUpdate(
-      { _id: id },
+      { _id: id, teamId },
       [
         {
           $set: {
@@ -463,6 +474,7 @@ class MonitorService implements IMonitorService {
   }
 
   async update(
+    teamId: string,
     tokenizedUser: ITokenizedUser,
     monitorId: string,
     updateData: Partial<IMonitor>
@@ -482,8 +494,8 @@ class MonitorService implements IMonitorService {
       }
     }
 
-    const updatedMonitor = await Monitor.findByIdAndUpdate(
-      monitorId,
+    const updatedMonitor = await Monitor.findOneAndUpdate(
+      { _id: monitorId, teamId },
       {
         $set: {
           ...safeUpdate,
@@ -501,8 +513,8 @@ class MonitorService implements IMonitorService {
     return updatedMonitor;
   }
 
-  async delete(monitorId: string) {
-    const monitor = await Monitor.findById(monitorId);
+  async delete(teamId: string, monitorId: string) {
+    const monitor = await Monitor.findOne({ _id: monitorId, teamId });
     if (!monitor) {
       throw new ApiError("Monitor not found", 404);
     }

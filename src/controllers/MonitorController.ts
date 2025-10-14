@@ -18,6 +18,11 @@ class MonitorController {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const monitor = await this.monitorService.create(tokenizedUser, req.body);
       res.status(201).json({
         message: "Monitor created successfully",
@@ -35,6 +40,11 @@ class MonitorController {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       let monitors;
       if (req.query.embedChecks === "true") {
         const page = Math.max(1, Number(req.query.page) || 1);
@@ -42,12 +52,13 @@ class MonitorController {
         const type: MonitorType[] = req.query.type as MonitorType[];
 
         monitors = await this.monitorService.getAllEmbedChecks(
+          teamId,
           page,
           limit,
           type
         );
       } else {
-        monitors = await this.monitorService.getAll();
+        monitors = await this.monitorService.getAll(teamId);
       }
 
       res.status(200).json({
@@ -64,6 +75,11 @@ class MonitorController {
       const tokenizedUser = req.user;
       if (!tokenizedUser) {
         return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
       }
 
       const id = req.params.id;
@@ -104,12 +120,21 @@ class MonitorController {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const id = req.params.id;
       if (!id) {
         throw new ApiError("Monitor ID is required", 400);
       }
 
-      const monitor = await this.monitorService.toggleActive(id, tokenizedUser);
+      const monitor = await this.monitorService.toggleActive(
+        teamId,
+        id,
+        tokenizedUser
+      );
       res.status(200).json({
         message: "Monitor paused/unpaused successfully",
         data: monitor,
@@ -124,6 +149,11 @@ class MonitorController {
       const tokenizedUser = req.user;
       if (!tokenizedUser) {
         return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
       }
 
       const id = req.params.id;
@@ -143,9 +173,14 @@ class MonitorController {
         if (!range || typeof range !== "string")
           throw new ApiError("Range query parameter is required", 400);
 
-        monitor = await this.monitorService.getEmbedChecks(id, range, status);
+        monitor = await this.monitorService.getEmbedChecks(
+          teamId,
+          id,
+          range,
+          status
+        );
       } else {
-        monitor = await this.monitorService.get(id);
+        monitor = await this.monitorService.get(teamId, id);
       }
 
       res.status(200).json({
@@ -164,12 +199,18 @@ class MonitorController {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const id = req.params.id;
       if (!id) {
         throw new ApiError("Monitor ID is required", 400);
       }
 
       const monitor = await this.monitorService.update(
+        teamId,
         tokenizedUser,
         id,
         req.body
@@ -189,11 +230,17 @@ class MonitorController {
       if (!tokenizedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const id = req.params.id;
       if (!id) {
         throw new ApiError("Monitor ID is required", 400);
       }
-      await this.monitorService.delete(id);
+      await this.monitorService.delete(teamId, id);
 
       res.status(200).json({
         message: "Monitor deleted successfully",

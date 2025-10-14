@@ -13,21 +13,22 @@ const SERVICE_NAME = "NotificationChannelServiceV2";
 export interface INotificationChannelService {
   create: (
     tokenizedUser: ITokenizedUser,
-
     notificationChannel: INotificationChannel
   ) => Promise<INotificationChannel>;
-  getAll: () => Promise<INotificationChannel[]>;
-  get: (id: string) => Promise<INotificationChannel>;
+  getAll: (teamId: string) => Promise<INotificationChannel[]>;
+  get: (teamId: string, id: string) => Promise<INotificationChannel>;
   toggleActive: (
+    teamId: string,
     tokenizedUser: ITokenizedUser,
     id: string
   ) => Promise<INotificationChannel>;
   update: (
+    teamId: string,
     tokenizedUser: ITokenizedUser,
     id: string,
     updateData: Partial<INotificationChannel>
   ) => Promise<INotificationChannel>;
-  delete: (id: string) => Promise<boolean>;
+  delete: (teamId: string, id: string) => Promise<boolean>;
 }
 
 class NotificationChannelService implements INotificationChannelService {
@@ -44,28 +45,34 @@ class NotificationChannelService implements INotificationChannelService {
     const data: INotificationChannel = {
       ...notificationChannelData,
       orgId: new mongoose.Types.ObjectId(tokenizedUser.orgId),
-      teamId: new mongoose.Types.ObjectId(tokenizedUser.teamId),
+      teamId: new mongoose.Types.ObjectId(tokenizedUser.currentTeamId),
+      createdBy: new mongoose.Types.ObjectId(tokenizedUser.sub),
+      updatedBy: new mongoose.Types.ObjectId(tokenizedUser.sub),
     };
 
     const notificationChannel = await NotificationChannel.create(data);
     return notificationChannel;
   };
 
-  get = async (id: string) => {
-    const channel = await NotificationChannel.findById(id);
+  get = async (teamId: string, id: string) => {
+    const channel = await NotificationChannel.findOne({ _id: id, teamId });
     if (!channel) {
       throw new ApiError("Notification channel not found", 404);
     }
     return channel;
   };
 
-  getAll = async () => {
-    return NotificationChannel.find();
+  getAll = async (teamId: string) => {
+    return NotificationChannel.find({ teamId });
   };
 
-  toggleActive = async (tokenizedUser: ITokenizedUser, id: string) => {
+  toggleActive = async (
+    teamId: string,
+    tokenizedUser: ITokenizedUser,
+    id: string
+  ) => {
     const updatedChannel = await NotificationChannel.findOneAndUpdate(
-      { _id: id },
+      { _id: id, teamId },
       [
         {
           $set: {
@@ -84,6 +91,7 @@ class NotificationChannelService implements INotificationChannelService {
   };
 
   update = async (
+    teamId: string,
     tokenizedUser: ITokenizedUser,
     id: string,
     updateData: Partial<INotificationChannel>
@@ -100,8 +108,8 @@ class NotificationChannelService implements INotificationChannelService {
       }
     }
 
-    const updatedChannel = await NotificationChannel.findByIdAndUpdate(
-      id,
+    const updatedChannel = await NotificationChannel.findOneAndUpdate(
+      { _id: id, teamId },
       {
         $set: {
           ...safeUpdate,
@@ -119,8 +127,8 @@ class NotificationChannelService implements INotificationChannelService {
     return updatedChannel;
   };
 
-  delete = async (id: string) => {
-    const result = await NotificationChannel.deleteOne({ _id: id });
+  delete = async (teamId: string, id: string) => {
+    const result = await NotificationChannel.deleteOne({ _id: id, teamId });
     if (!result.deletedCount) {
       throw new ApiError("Notification channel not found", 404);
     }
