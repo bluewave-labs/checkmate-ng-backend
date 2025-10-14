@@ -2,6 +2,8 @@ import { Router } from "express";
 import { MaintenanceController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
 import { verifyPermission } from "@/middleware/VerifyPermissions.js";
+import { addUserContext } from "@/middleware/AddUserContext.js";
+import { PERMISSIONS } from "@/services/business/AuthService.js";
 
 class MaintenanceRoutes {
   private router;
@@ -16,42 +18,48 @@ class MaintenanceRoutes {
     this.router.post(
       "/",
       verifyToken,
-      verifyPermission(["maintenance.create"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.maintenance.write]),
       this.controller.create
     );
 
     this.router.get(
       "/",
       verifyToken,
-      verifyPermission(["maintenance.view"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.maintenance.read]),
       this.controller.getAll
     );
 
     this.router.patch(
       "/:id/active",
       verifyToken,
-      verifyPermission(["maintenance.update"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.maintenance.update]),
       this.controller.toggleActive
     );
 
     this.router.patch(
       "/:id",
       verifyToken,
-      verifyPermission(["maintenance.update"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.maintenance.update]),
       this.controller.update
     );
 
     this.router.get(
       "/:id",
       verifyToken,
-      verifyPermission(["maintenance.view"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.maintenance.read]),
       this.controller.get
     );
 
     this.router.delete(
       "/:id",
       verifyToken,
-      verifyPermission(["maintenance.delete"]),
+      addUserContext,
+      verifyPermission([PERMISSIONS.maintenance.delete]),
       this.controller.delete
     );
   };

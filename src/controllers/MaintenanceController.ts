@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import MaintenanceService from "@/services/business/MaintenanceService.js";
-
+import ApiError from "@/utils/ApiError.js";
 class MaintenanceController {
   private maintenanceService: MaintenanceService;
   constructor(maintenanceService: MaintenanceService) {
@@ -25,7 +25,17 @@ class MaintenanceController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const maintenances = await this.maintenanceService.getAll();
+      const tokenizedUser = req.user;
+      if (!tokenizedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
+      const maintenances = await this.maintenanceService.getAll(teamId);
       res.status(200).json({
         message: "OK",
         data: maintenances,
@@ -41,11 +51,18 @@ class MaintenanceController {
       if (!tokenizedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const id = req.params.id;
       if (!id) {
         return res.status(400).json({ message: "ID parameter is required" });
       }
       const maintenance = await this.maintenanceService.toggleActive(
+        teamId,
         tokenizedUser,
         id
       );
@@ -61,11 +78,18 @@ class MaintenanceController {
       if (!tokenizedUser) {
         return res.status(401).json({ message: "Unauthorized" });
       }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const id = req.params.id;
       if (!id) {
         return res.status(400).json({ message: "ID parameter is required" });
       }
       const updatedMaintenance = await this.maintenanceService.update(
+        teamId,
         tokenizedUser,
         id,
         req.body
@@ -78,11 +102,21 @@ class MaintenanceController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const tokenizedUser = req.user;
+      if (!tokenizedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const id = req.params.id;
       if (!id) {
         return res.status(400).json({ message: "ID parameter is required" });
       }
-      const maintenance = await this.maintenanceService.get(id);
+      const maintenance = await this.maintenanceService.get(teamId, id);
       res.status(200).json({ message: "OK", data: maintenance });
     } catch (error) {
       next(error);
@@ -91,11 +125,21 @@ class MaintenanceController {
 
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const tokenizedUser = req.user;
+      if (!tokenizedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
       const id = req.params.id;
       if (!id) {
         return res.status(400).json({ message: "ID parameter is required" });
       }
-      await this.maintenanceService.delete(id);
+      await this.maintenanceService.delete(teamId, id);
       res.status(204).json({ message: "OK" });
     } catch (error) {
       next(error);

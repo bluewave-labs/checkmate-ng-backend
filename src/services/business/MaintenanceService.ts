@@ -10,21 +10,22 @@ const SERVICE_NAME = "MaintenanceServiceV2";
 export interface IMaintenanceService {
   create: (
     tokenizedUser: ITokenizedUser,
-
     maintenance: IMaintenance
   ) => Promise<IMaintenance>;
-  getAll: () => Promise<IMaintenance[]>;
-  get: (id: string) => Promise<IMaintenance>;
+  getAll: (teamId: string) => Promise<IMaintenance[]>;
+  get: (teamId: string, id: string) => Promise<IMaintenance>;
   toggleActive: (
+    teamId: string,
     tokenizedUser: ITokenizedUser,
     id: string
   ) => Promise<IMaintenance>;
   update: (
+    teamId: string,
     tokenizedUser: ITokenizedUser,
     id: string,
     updateData: Partial<IMaintenance>
   ) => Promise<IMaintenance>;
-  delete: (id: string) => Promise<boolean>;
+  delete: (teamId: string, id: string) => Promise<boolean>;
   isInMaintenance: (monitorId: string) => Promise<boolean>;
 }
 
@@ -49,28 +50,32 @@ class MaintenanceService implements IMaintenanceService {
     const maintenance = await Maintenance.create({
       ...maintenanceData,
       orgId: tokenizedUser.orgId,
-      teamId: tokenizedUser.teamId,
+      teamId: tokenizedUser.currentTeamId,
       createdBy: tokenizedUser.sub,
       updatedBy: tokenizedUser.sub,
     });
     return maintenance;
   };
 
-  get = async (id: string) => {
-    const maintenance = await Maintenance.findById(id);
+  get = async (teamId: string, id: string) => {
+    const maintenance = await Maintenance.findOne({ _id: id, teamId });
     if (!maintenance) {
       throw new ApiError("Maintenance not found", 404);
     }
     return maintenance;
   };
 
-  getAll = async () => {
-    return Maintenance.find();
+  getAll = async (teamId: string) => {
+    return Maintenance.find({ teamId });
   };
 
-  toggleActive = async (tokenizedUser: ITokenizedUser, id: string) => {
+  toggleActive = async (
+    teamId: string,
+    tokenizedUser: ITokenizedUser,
+    id: string
+  ) => {
     const updatedMaintenance = await Maintenance.findOneAndUpdate(
-      { _id: id },
+      { _id: id, teamId },
       [
         {
           $set: {
@@ -89,6 +94,7 @@ class MaintenanceService implements IMaintenanceService {
   };
 
   update = async (
+    teamId: string,
     tokenizedUser: ITokenizedUser,
     id: string,
     updateData: Partial<IMaintenance>
@@ -107,8 +113,8 @@ class MaintenanceService implements IMaintenanceService {
       }
     }
 
-    const updatedMaintenance = await Maintenance.findByIdAndUpdate(
-      id,
+    const updatedMaintenance = await Maintenance.findOneAndUpdate(
+      { _id: id, teamId },
       {
         $set: {
           ...safeUpdate,
@@ -126,8 +132,8 @@ class MaintenanceService implements IMaintenanceService {
     return updatedMaintenance;
   };
 
-  delete = async (id: string) => {
-    const result = await Maintenance.deleteOne({ _id: id });
+  delete = async (teamId: string, id: string) => {
+    const result = await Maintenance.deleteOne({ _id: id, teamId });
     if (!result.deletedCount) {
       throw new ApiError("Maintenance not found", 404);
     }

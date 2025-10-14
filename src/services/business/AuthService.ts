@@ -42,6 +42,13 @@ export const PERMISSIONS = {
     update: "notifications.update",
     delete: "notifications.delete",
   },
+  maintenance: {
+    all: "maintenance.*",
+    write: "maintenance.write",
+    read: "maintenance.read",
+    update: "maintenance.update",
+    delete: "maintenance.delete",
+  },
   checks: {
     all: "checks.*",
     write: "checks.write",
