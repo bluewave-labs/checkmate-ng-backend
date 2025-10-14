@@ -4,7 +4,7 @@ import { OrgMembership, TeamMembership, IRole } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
 
 interface IRolesObj {
-  orgRole: IRole;
+  orgRole?: IRole;
   teamRole: IRole;
 }
 interface IRolesCacheData {
@@ -60,16 +60,13 @@ export const addUserContext = async (
         .lean(),
     ]);
 
-    if (!orgRole || !orgRole.roleId) {
-      throw new ApiError("User has no role in the organization", 403);
-    }
     if (!teamRole || !teamRole.roleId) {
       throw new ApiError("User has no role in the team", 403);
     }
 
     rolesCache.set(cacheKey, {
       data: {
-        orgRole: orgRole.roleId,
+        orgRole: orgRole?.roleId,
         teamRole: teamRole.roleId,
       },
       expiresAt: Date.now() + CACHE_TTL,
@@ -77,7 +74,7 @@ export const addUserContext = async (
 
     req.user.currentTeamId = currentTeamId;
     req.user.roles = {
-      orgRole: orgRole.roleId,
+      orgRole: orgRole?.roleId,
       teamRole: teamRole.roleId,
     };
 

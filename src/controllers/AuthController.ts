@@ -83,7 +83,7 @@ class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       });
 
-      res.status(201).json({ message: "User created successfully" });
+      res.status(201).json({ message: "User registered successfully" });
     } catch (error) {
       next(error);
     }

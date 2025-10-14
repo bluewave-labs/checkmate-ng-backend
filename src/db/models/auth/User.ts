@@ -8,7 +8,7 @@ export interface ITokenizedUser {
   teamIds: string[];
   currentTeamId?: string;
   roles?: {
-    orgRole: IRole;
+    orgRole?: IRole;
     teamRole: IRole;
   };
 }
