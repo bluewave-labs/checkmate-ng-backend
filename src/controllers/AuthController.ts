@@ -35,7 +35,6 @@ class AuthController {
       }
 
       const token = encode(result);
-      const decoded = decode(token);
 
       res.cookie("token", token, {
         httpOnly: true,
@@ -46,7 +45,7 @@ class AuthController {
 
       res.status(201).json({
         message: "User created successfully",
-        data: decoded,
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -77,7 +76,6 @@ class AuthController {
       await this.inviteService.delete(invite._id.toString());
 
       const jwt = encode(result);
-      const decoded = decode(token);
 
       res.cookie("token", jwt, {
         httpOnly: true,
@@ -88,7 +86,7 @@ class AuthController {
 
       res
         .status(201)
-        .json({ message: "User registered successfully", data: decoded });
+        .json({ message: "User registered successfully", data: result });
     } catch (error) {
       next(error);
     }
@@ -105,7 +103,6 @@ class AuthController {
       }
       const result = await this.authService.login({ email, password });
       const token = encode(result);
-      const decoded = decode(token);
 
       res.cookie("token", token, {
         httpOnly: true,
@@ -116,7 +113,7 @@ class AuthController {
 
       res.status(200).json({
         message: "Login successful",
-        data: decoded,
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -132,9 +129,14 @@ class AuthController {
     res.status(200).json({ message: "Logout successful" });
   };
 
-  me = (req: Request, res: Response, next: NextFunction) => {
+  me = async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    return res.status(200).json({ message: "OK", data: user });
+    if (!user) {
+      throw new ApiError("Unauthorized", 401);
+    }
+    const teams = await this.authService.getTeams(user.teamIds);
+    const userWithTeams = { ...user, teams };
+    return res.status(200).json({ message: "OK", data: userWithTeams });
   };
 
   cleanup = async (req: Request, res: Response) => {

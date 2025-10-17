@@ -1,11 +1,12 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
-import { IRole } from "@/db/models/index.js";
+import { IRole, ITeam } from "@/db/models/index.js";
 
 export interface ITokenizedUser {
   sub: string;
   email: string;
   orgId: string;
   teamIds: string[];
+  teams?: Partial<ITeam>[];
   currentTeamId?: string;
   roles?: {
     orgRole?: IRole;

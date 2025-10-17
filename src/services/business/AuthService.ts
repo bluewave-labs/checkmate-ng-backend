@@ -5,6 +5,7 @@ import {
   IOrgMembership,
   OrgMembership,
   Team,
+  ITeam,
   ITeamMembership,
   TeamMembership,
   Role,
@@ -96,6 +97,7 @@ export interface IAuthService {
     signupData: RegisterData
   ): Promise<ITokenizedUser>;
   login(loginData: LoginData): Promise<ITokenizedUser>;
+  getTeams(teamIds: string[]): Promise<ITeam[]>;
   cleanup(): Promise<void>;
   cleanMonitors(): Promise<void>;
 }
@@ -205,6 +207,7 @@ class AuthService implements IAuthService {
         email: user.email,
         orgId: org._id.toString(),
         teamIds: [team._id.toString()],
+        teams: [{ _id: team._id, name: team.name }],
       };
     } catch (error) {
       await TeamMembership.deleteMany({ _id: { $in: created.memberships } });
@@ -302,11 +305,18 @@ class AuthService implements IAuthService {
         teamMemberships = [newTeamMembership];
       }
 
+      const teamMembershipIds = teamMemberships.map((tm) =>
+        tm.teamId.toString()
+      );
+      const teams = await Team.find({ _id: { $in: teamMembershipIds } }).select(
+        "_id name"
+      );
       return {
         sub: user._id.toString(),
         email: user.email,
         orgId: orgId.toString(),
-        teamIds: teamMemberships.map((tm) => tm.teamId.toString()),
+        teamIds: teamMembershipIds,
+        teams: teams,
       };
     } catch (error) {
       if (created.orgMembership) {
@@ -350,12 +360,25 @@ class AuthService implements IAuthService {
       throw new ApiError("User is not part of any team");
     }
 
+    const teamMembershipIds = teamMemberships.map((tm) => tm.teamId.toString());
+    const teams = await Team.find({ _id: { $in: teamMembershipIds } }).select(
+      "_id name"
+    );
+
     return {
       sub: user._id.toString(),
       email: user.email,
       orgId: orgMembership.orgId.toString(),
-      teamIds: teamMemberships.map((tm) => tm.teamId.toString()),
+      teamIds: teamMembershipIds,
+      teams: teams,
     };
+  }
+
+  async getTeams(teamIds: string[]): Promise<ITeam[]> {
+    const teams = await Team.find({ _id: { $in: teamIds } }).select(
+      "_id, name"
+    );
+    return teams;
   }
 
   async cleanup() {
