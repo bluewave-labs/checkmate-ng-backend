@@ -18,6 +18,7 @@ import {
   MonitorService,
   QueueService,
   ServiceRegistry,
+  TeamService,
 } from "@/services/index.js";
 
 export const initServices = async () => {
@@ -46,6 +47,7 @@ export const initServices = async () => {
   const authService = new AuthService(jobQueue);
   const monitorService = new MonitorService(jobQueue);
   const queueService = new QueueService(jobQueue);
+  const teamService = new TeamService();
 
   const services = {
     checkService,
@@ -66,6 +68,7 @@ export const initServices = async () => {
     authService,
     monitorService,
     queueService,
+    teamService,
   };
 
   Object.values(services).forEach((service) => {

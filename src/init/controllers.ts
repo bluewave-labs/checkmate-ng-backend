@@ -5,6 +5,7 @@ import {
   MonitorController,
   NotificationChannelController,
   QueueController,
+  TeamController,
 } from "@/controllers/index.js";
 
 export const initControllers = (services: any) => {
@@ -26,5 +27,7 @@ export const initControllers = (services: any) => {
     services.notificationChannelService
   );
   controllers.queueController = new QueueController(services.jobQueue);
+
+  controllers.teamController = new TeamController(services.teamService);
   return controllers;
 };

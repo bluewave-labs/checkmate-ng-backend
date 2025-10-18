@@ -7,6 +7,7 @@ export { default as MonitorStatsService } from "@/services/business/MonitorStats
 export { default as NotificationChannelService } from "@/services/business/NotificationChannelService.js";
 export { default as QueueService } from "@/services/business/QueueService.js";
 export { default as UserService } from "@/services/business/UserService.js";
+export { default as TeamService } from "@/services/business/TeamService.js";
 
 export { default as NetworkService } from "@/services/infrastructure/NetworkService.js";
 export { default as NotificationService } from "@/services/infrastructure/NotificationService.js";

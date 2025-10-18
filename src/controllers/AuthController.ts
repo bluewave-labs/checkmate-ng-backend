@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { encode, decode } from "@/utils/JWTUtils.js";
 import AuthService from "@/services/business/AuthService.js";
-import UserService from "@/services/business/UserService.js";
 import ApiError from "@/utils/ApiError.js";
 import InviteService from "@/services/business/InviteService.js";
-import { IInvite, ITokenizedUser } from "@/db/models/index.js";
 class AuthController {
   private authService: AuthService;
   private inviteService: InviteService;
@@ -34,7 +32,11 @@ class AuthController {
         throw new ApiError("Registration failed");
       }
 
-      const token = encode(result);
+      const token = encode({
+        sub: result.sub,
+        email: result.email,
+        orgId: result.orgId,
+      });
 
       res.cookie("token", token, {
         httpOnly: true,
@@ -75,7 +77,11 @@ class AuthController {
 
       await this.inviteService.delete(invite._id.toString());
 
-      const jwt = encode(result);
+      const jwt = encode({
+        sub: result.sub,
+        email: result.email,
+        orgId: result.orgId,
+      });
 
       res.cookie("token", jwt, {
         httpOnly: true,
@@ -102,7 +108,12 @@ class AuthController {
           .json({ message: "Email and password are required" });
       }
       const result = await this.authService.login({ email, password });
-      const token = encode(result);
+
+      const token = encode({
+        sub: result.sub,
+        email: result.email,
+        orgId: result.orgId,
+      });
 
       res.cookie("token", token, {
         httpOnly: true,
@@ -134,8 +145,16 @@ class AuthController {
     if (!user) {
       throw new ApiError("Unauthorized", 401);
     }
-    const teams = await this.authService.getTeams(user.teamIds);
-    const userWithTeams = { ...user, teams };
+
+    // Need to get teamIds
+    const teamIds = await this.authService.getTeamIds(user.sub);
+
+    if (!teamIds) {
+      throw new ApiError("User team IDs not found", 400);
+    }
+
+    const teams = await this.authService.getTeams(teamIds);
+    const userWithTeams = { ...user, teamIds, teams };
     return res.status(200).json({ message: "OK", data: userWithTeams });
   };
 

@@ -1,10 +1,7 @@
 import { Router } from "express";
 
-import express from "express";
 import { AuthController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
-
-const router = express.Router();
 
 class AuthRoutes {
   private controller: AuthController;

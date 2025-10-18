@@ -5,8 +5,8 @@ export interface ITokenizedUser {
   sub: string;
   email: string;
   orgId: string;
-  teamIds: string[];
-  teams?: Partial<ITeam>[];
+  teamIds?: string[];
+  teams?: ITeam[];
   currentTeamId?: string;
   roles?: {
     orgRole?: IRole;

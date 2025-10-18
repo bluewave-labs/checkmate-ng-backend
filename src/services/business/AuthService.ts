@@ -74,6 +74,13 @@ export const PERMISSIONS = {
     update: "statusPages.update",
     delete: "statusPages.delete",
   },
+  teams: {
+    all: "teams.*",
+    write: "teams.write",
+    read: "teams.read",
+    update: "teams.update",
+    delete: "teams.delete",
+  },
 };
 
 export type RegisterData = {
@@ -88,7 +95,7 @@ export type LoginData = {
   password: string;
 };
 
-export type AuthResult = ITokenizedUser;
+export type AuthResult = Partial<ITokenizedUser>;
 
 export interface IAuthService {
   register(signupData: RegisterData): Promise<ITokenizedUser>;
@@ -97,6 +104,7 @@ export interface IAuthService {
     signupData: RegisterData
   ): Promise<ITokenizedUser>;
   login(loginData: LoginData): Promise<ITokenizedUser>;
+  getTeamIds(userId: string): Promise<string[]>;
   getTeams(teamIds: string[]): Promise<ITeam[]>;
   cleanup(): Promise<void>;
   cleanMonitors(): Promise<void>;
@@ -207,7 +215,7 @@ class AuthService implements IAuthService {
         email: user.email,
         orgId: org._id.toString(),
         teamIds: [team._id.toString()],
-        teams: [{ _id: team._id, name: team.name }],
+        teams: [team],
       };
     } catch (error) {
       await TeamMembership.deleteMany({ _id: { $in: created.memberships } });
@@ -304,19 +312,12 @@ class AuthService implements IAuthService {
         created.teamMembership = newTeamMembership._id;
         teamMemberships = [newTeamMembership];
       }
-
-      const teamMembershipIds = teamMemberships.map((tm) =>
-        tm.teamId.toString()
-      );
-      const teams = await Team.find({ _id: { $in: teamMembershipIds } }).select(
-        "_id name"
-      );
+      const teamIds = teamMemberships.map((tm) => tm.teamId.toString());
       return {
         sub: user._id.toString(),
         email: user.email,
         orgId: orgId.toString(),
-        teamIds: teamMembershipIds,
-        teams: teams,
+        teamIds,
       };
     } catch (error) {
       if (created.orgMembership) {
@@ -354,24 +355,26 @@ class AuthService implements IAuthService {
       throw new ApiError("User is not part of any organization");
     }
 
-    // Find TeamMembership
+    // Get teams
     const teamMemberships = await TeamMembership.find({ userId: user._id });
-    if (!teamMemberships) {
-      throw new ApiError("User is not part of any team");
-    }
-
-    const teamMembershipIds = teamMemberships.map((tm) => tm.teamId.toString());
-    const teams = await Team.find({ _id: { $in: teamMembershipIds } }).select(
-      "_id name"
-    );
+    const teamIds = teamMemberships.map((tm) => tm.teamId.toString());
+    const teams = await this.getTeams(teamIds);
 
     return {
       sub: user._id.toString(),
       email: user.email,
       orgId: orgMembership.orgId.toString(),
-      teamIds: teamMembershipIds,
-      teams: teams,
+      teamIds,
+      teams,
     };
+  }
+
+  async getTeamIds(userId: string): Promise<string[]> {
+    const teamMemberships = await TeamMembership.find({ userId })
+      .select("teamId")
+      .lean();
+    const teamIds = teamMemberships.map((t) => t.teamId.toString());
+    return teamIds;
   }
 
   async getTeams(teamIds: string[]): Promise<ITeam[]> {
