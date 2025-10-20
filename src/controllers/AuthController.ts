@@ -21,22 +21,20 @@ class AuthController {
         );
       }
 
-      const result = await this.authService.register({
-        email,
-        firstName,
-        lastName,
-        password,
-      });
+      const { tokenizedUser, returnableUser } = await this.authService.register(
+        {
+          email,
+          firstName,
+          lastName,
+          password,
+        }
+      );
 
-      if (!result) {
+      if (!returnableUser || !tokenizedUser) {
         throw new ApiError("Registration failed");
       }
 
-      const token = encode({
-        sub: result.sub,
-        email: result.email,
-        orgId: result.orgId,
-      });
+      const token = encode(tokenizedUser);
 
       res.cookie("token", token, {
         httpOnly: true,
@@ -47,7 +45,7 @@ class AuthController {
 
       res.status(201).json({
         message: "User created successfully",
-        data: result,
+        data: returnableUser,
       });
     } catch (error) {
       next(error);
@@ -66,22 +64,16 @@ class AuthController {
       }
 
       const invite = await this.inviteService.get(token);
-      const result = await this.authService.registerWithInvite(
-        invite,
-        req.body
-      );
+      const { tokenizedUser, returnableUser } =
+        await this.authService.registerWithInvite(invite, req.body);
 
-      if (!result) {
+      if (!tokenizedUser || !returnableUser) {
         throw new Error("Registration failed");
       }
 
       await this.inviteService.delete(invite._id.toString());
 
-      const jwt = encode({
-        sub: result.sub,
-        email: result.email,
-        orgId: result.orgId,
-      });
+      const jwt = encode(tokenizedUser);
 
       res.cookie("token", jwt, {
         httpOnly: true,
@@ -90,9 +82,10 @@ class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       });
 
-      res
-        .status(201)
-        .json({ message: "User registered successfully", data: result });
+      res.status(201).json({
+        message: "User registered successfully",
+        data: returnableUser,
+      });
     } catch (error) {
       next(error);
     }
@@ -107,13 +100,12 @@ class AuthController {
           .status(400)
           .json({ message: "Email and password are required" });
       }
-      const result = await this.authService.login({ email, password });
-
-      const token = encode({
-        sub: result.sub,
-        email: result.email,
-        orgId: result.orgId,
+      const { tokenizedUser, returnableUser } = await this.authService.login({
+        email,
+        password,
       });
+
+      const token = encode(tokenizedUser);
 
       res.cookie("token", token, {
         httpOnly: true,
@@ -124,7 +116,7 @@ class AuthController {
 
       res.status(200).json({
         message: "Login successful",
-        data: result,
+        data: returnableUser,
       });
     } catch (error) {
       next(error);
@@ -145,17 +137,10 @@ class AuthController {
     if (!user) {
       throw new ApiError("Unauthorized", 401);
     }
-
-    // Need to get teamIds
-    const teamIds = await this.authService.getTeamIds(user.sub);
-
-    if (!teamIds) {
-      throw new ApiError("User team IDs not found", 400);
-    }
-
-    const teams = await this.authService.getTeams(teamIds);
-    const userWithTeams = { ...user, teamIds, teams };
-    return res.status(200).json({ message: "OK", data: userWithTeams });
+    const returnableUser = await this.authService.me(user.sub);
+    res
+      .status(200)
+      .json({ message: "User retrieved successfully", data: returnableUser });
   };
 
   cleanup = async (req: Request, res: Response) => {

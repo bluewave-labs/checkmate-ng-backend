@@ -3,7 +3,7 @@ export interface IOrgMembership extends Document {
   _id: Types.ObjectId;
   orgId: Types.ObjectId;
   userId: Types.ObjectId;
-  roleId: Types.ObjectId;
+  roleId?: Types.ObjectId;
   role: string;
   createdAt: Date;
   updatedAt: Date;

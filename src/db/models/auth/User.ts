@@ -5,6 +5,11 @@ export interface ITokenizedUser {
   sub: string;
   email: string;
   orgId: string;
+}
+export interface IUserContext {
+  sub: string;
+  email: string;
+  orgId: string;
   teamIds?: string[];
   teams?: ITeam[];
   currentTeamId?: string;
@@ -12,6 +17,22 @@ export interface ITokenizedUser {
     orgRole?: IRole;
     teamRole: IRole;
   };
+}
+
+export interface IUserReturnable {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  org: {
+    name: string;
+    permissions: string[];
+  };
+  teams: {
+    id: string;
+    name: string;
+    permissions: string[];
+  }[];
 }
 
 export interface IUser extends Document {

@@ -6,9 +6,12 @@ import {
   OrgMembership,
   Team,
   ITeam,
+  IUserContext,
+  IUserReturnable,
   ITeamMembership,
   TeamMembership,
   Role,
+  IRole,
   IUser,
   ITokenizedUser,
   Monitor,
@@ -98,12 +101,22 @@ export type LoginData = {
 export type AuthResult = Partial<ITokenizedUser>;
 
 export interface IAuthService {
-  register(signupData: RegisterData): Promise<ITokenizedUser>;
+  me(userId: string): Promise<IUserReturnable>;
+  register(signupData: RegisterData): Promise<{
+    tokenizedUser: ITokenizedUser;
+    returnableUser: IUserReturnable;
+  }>;
   registerWithInvite(
     invite: IInvite,
     signupData: RegisterData
-  ): Promise<ITokenizedUser>;
-  login(loginData: LoginData): Promise<ITokenizedUser>;
+  ): Promise<{
+    tokenizedUser: ITokenizedUser;
+    returnableUser: IUserReturnable;
+  }>;
+  login(loginData: LoginData): Promise<{
+    tokenizedUser: ITokenizedUser;
+    returnableUser: IUserReturnable;
+  }>;
   getTeamIds(userId: string): Promise<string[]>;
   getTeams(teamIds: string[]): Promise<ITeam[]>;
   cleanup(): Promise<void>;
@@ -117,6 +130,71 @@ class AuthService implements IAuthService {
     this.SERVICE_NAME = SERVICE_NAME;
     this.jobQueue = jobQueue;
   }
+
+  me = async (userId: string) => {
+    // Need to get teamIds
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError("User not found", 404);
+    }
+
+    // Find OrgMembership
+    const orgMembership = await OrgMembership.findOne({
+      userId: user._id,
+    }).lean();
+    if (!orgMembership) {
+      throw new ApiError("User is not part of any organization");
+    }
+
+    // Find org and roles
+    const org = await Org.findById(orgMembership.orgId).lean();
+
+    if (!org) {
+      throw new ApiError("Organization not found");
+    }
+
+    const orgRoles = await Role.findById(orgMembership.roleId).lean();
+    if (!orgRoles) {
+      throw new ApiError("Organization role not found");
+    }
+
+    // Get teams
+    const teamMembershipWithRoles = await TeamMembership.find({
+      userId: user._id,
+    })
+      .populate<{ roleId: IRole }>("roleId")
+      .lean();
+
+    const teamIds = teamMembershipWithRoles.map((tm) => tm.teamId.toString());
+
+    const teams = await this.getTeams(teamIds);
+    const teamMap = new Map(teams.map((t) => [t._id.toString(), t]));
+    const returnableTeams = teamMembershipWithRoles.map((tm) => {
+      const team = teamMap.get(tm.teamId.toString());
+      if (!team) {
+        throw new ApiError("Team not found for membership");
+      }
+      return {
+        id: team._id.toString(),
+        name: team.name,
+        permissions: tm.roleId?.permissions ?? [],
+      };
+    });
+
+    const returnableUser: IUserReturnable = {
+      id: user._id.toString(),
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      org: {
+        name: org.name,
+        permissions: orgRoles?.permissions,
+      },
+      teams: returnableTeams,
+    };
+
+    return returnableUser;
+  };
 
   async register(signupData: RegisterData) {
     const passwordHash = await hashPassword(signupData.password);
@@ -210,13 +288,31 @@ class AuthService implements IAuthService {
       });
       created.memberships.push(teamMembership._id);
 
-      return {
+      const tokenizedUser: ITokenizedUser = {
         sub: user._id.toString(),
         email: user.email,
         orgId: org._id.toString(),
-        teamIds: [team._id.toString()],
-        teams: [team],
       };
+
+      const returnableTeam = {
+        id: team._id.toString(),
+        name: team.name,
+        permissions: roles[2]?.permissions || [],
+      };
+
+      const returnableUser: IUserReturnable = {
+        id: user._id.toString(),
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        org: {
+          name: org.name,
+          permissions: roles[0]?.permissions || [],
+        },
+        teams: [returnableTeam],
+      };
+
+      return { tokenizedUser, returnableUser };
     } catch (error) {
       await TeamMembership.deleteMany({ _id: { $in: created.memberships } });
       await Team.deleteOne({ _id: created.team });
@@ -230,7 +326,10 @@ class AuthService implements IAuthService {
   async registerWithInvite(
     invite: IInvite,
     signupData: RegisterData
-  ): Promise<ITokenizedUser> {
+  ): Promise<{
+    tokenizedUser: ITokenizedUser;
+    returnableUser: IUserReturnable;
+  }> {
     const created: Record<string, any> = {
       user: null,
       orgMembership: null,
@@ -238,7 +337,14 @@ class AuthService implements IAuthService {
     };
 
     try {
-      const { orgId, orgRole, teamId, teamRole, email, expiry } = invite;
+      const {
+        orgId,
+        orgRole: orgRoleId,
+        teamId,
+        teamRole,
+        email,
+        expiry,
+      } = invite;
 
       if (expiry < new Date()) {
         throw new ApiError("Invite token has expired", 400);
@@ -247,6 +353,12 @@ class AuthService implements IAuthService {
       let user = null;
       let orgMembership = null;
       let teamMemberships = null;
+      let orgPermissions: string[] = [];
+
+      const org = await Org.findById(orgId);
+      if (!org) {
+        throw new ApiError("Organization not found", 404);
+      }
 
       user = await User.findOne({ email });
 
@@ -262,10 +374,13 @@ class AuthService implements IAuthService {
           );
         }
 
-        if (orgRole) {
+        if (orgRoleId) {
           await OrgMembership.updateOne(
             { _id: orgMembership._id },
-            { roleId: orgRole }
+            { roleId: orgRoleId }
+          );
+          orgPermissions = await Role.findById(orgRoleId).then(
+            (r) => r?.permissions || []
           );
         }
 
@@ -299,7 +414,7 @@ class AuthService implements IAuthService {
         const newOrgMembership = await OrgMembership.create({
           userId: user._id,
           orgId,
-          roleId: orgRole,
+          roleId: orgRoleId,
         });
         created.orgMembership = newOrgMembership._id;
 
@@ -312,12 +427,51 @@ class AuthService implements IAuthService {
         created.teamMembership = newTeamMembership._id;
         teamMemberships = [newTeamMembership];
       }
-      const teamIds = teamMemberships.map((tm) => tm.teamId.toString());
-      return {
+
+      // Get teams
+      const teamMembershipWithRoles = await TeamMembership.find({
+        userId: user._id,
+      })
+        .populate<{ roleId: IRole }>("roleId")
+        .lean();
+
+      const teamIds = teamMembershipWithRoles.map((tm) => tm.teamId.toString());
+
+      const teams = await this.getTeams(teamIds);
+      const teamMap = new Map(teams.map((t) => [t._id.toString(), t]));
+      const returnableTeams = teamMembershipWithRoles.map((tm) => {
+        const team = teamMap.get(tm.teamId.toString());
+        if (!team) {
+          throw new ApiError("Team not found for membership");
+        }
+        return {
+          id: team._id.toString(),
+          name: team.name,
+          permissions: tm.roleId?.permissions ?? [],
+        };
+      });
+
+      const tokenizedUser: ITokenizedUser = {
         sub: user._id.toString(),
         email: user.email,
         orgId: orgId.toString(),
-        teamIds,
+      };
+
+      const returnableUser: IUserReturnable = {
+        id: user._id.toString(),
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        org: {
+          name: org.name,
+          permissions: orgPermissions,
+        },
+        teams: returnableTeams,
+      };
+
+      return {
+        tokenizedUser,
+        returnableUser,
       };
     } catch (error) {
       if (created.orgMembership) {
@@ -333,7 +487,10 @@ class AuthService implements IAuthService {
     }
   }
 
-  async login(loginData: LoginData): Promise<ITokenizedUser> {
+  async login(loginData: LoginData): Promise<{
+    tokenizedUser: ITokenizedUser;
+    returnableUser: IUserReturnable;
+  }> {
     const { email, password } = loginData;
 
     // Find user by email
@@ -350,22 +507,64 @@ class AuthService implements IAuthService {
     }
 
     // Find OrgMembership
-    const orgMembership = await OrgMembership.findOne({ userId: user._id });
+    const orgMembership = await OrgMembership.findOne({
+      userId: user._id,
+    }).lean();
     if (!orgMembership) {
       throw new ApiError("User is not part of any organization");
     }
 
-    // Get teams
-    const teamMemberships = await TeamMembership.find({ userId: user._id });
-    const teamIds = teamMemberships.map((tm) => tm.teamId.toString());
-    const teams = await this.getTeams(teamIds);
+    // Find org and roles
+    const org = await Org.findById(orgMembership.orgId).lean();
 
-    return {
+    if (!org) {
+      throw new ApiError("Organization not found");
+    }
+
+    const orgRoles = await Role.findById(orgMembership.roleId).lean();
+
+    // Get teams
+    const teamMemberships = await TeamMembership.find({ userId: user._id })
+      .populate<{ roleId: IRole }>("roleId")
+      .lean();
+
+    const teamIds = teamMemberships.map((tm) => tm.teamId.toString());
+
+    const teams = await this.getTeams(teamIds);
+    const teamMap = new Map(teams.map((t) => [t._id.toString(), t]));
+    const returnableTeams = teamMemberships.map((tm) => {
+      const team = teamMap.get(tm.teamId.toString());
+      if (!team) {
+        throw new ApiError("Team not found for membership");
+      }
+      return {
+        id: team._id.toString(),
+        name: team.name,
+        permissions: tm.roleId?.permissions ?? [],
+      };
+    });
+
+    const tokenizedUser: ITokenizedUser = {
       sub: user._id.toString(),
       email: user.email,
       orgId: orgMembership.orgId.toString(),
-      teamIds,
-      teams,
+    };
+
+    const returnableUser: IUserReturnable = {
+      id: user._id.toString(),
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      org: {
+        name: org.name,
+        permissions: orgRoles?.permissions || [],
+      },
+      teams: returnableTeams,
+    };
+
+    return {
+      tokenizedUser,
+      returnableUser,
     };
   }
 

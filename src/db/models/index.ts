@@ -13,7 +13,12 @@ export { MonitorStats } from "./monitors/MonitorStats.js";
 export type { IMonitorStats } from "./monitors/MonitorStats.js";
 
 export { User } from "./auth/User.js";
-export type { IUser, ITokenizedUser } from "./auth/User.js";
+export type {
+  IUser,
+  ITokenizedUser,
+  IUserReturnable,
+  IUserContext,
+} from "./auth/User.js";
 
 export { NotificationChannel } from "./notification-channel/NotificationChannel.js";
 export type { INotificationChannel } from "./notification-channel/NotificationChannel.js";
