@@ -96,8 +96,12 @@ const getRoles = async (
       .lean(),
   ]);
 
-  if (!orgRole || !teamRole) {
-    throw new ApiError("User has no role in the team or organization", 403);
+  if (!orgRole) {
+    throw new ApiError("User has no role in the organization", 403);
+  }
+
+  if (!teamRole) {
+    throw new ApiError("User has no role in the team", 403);
   }
 
   const cacheData = { orgRole: orgRole.roleId, teamRole: teamRole.roleId };

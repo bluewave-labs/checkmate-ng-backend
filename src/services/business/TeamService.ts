@@ -12,6 +12,7 @@ import {
   ITokenizedUser,
   ITeamMembership,
   OrgMembership,
+  IUserContext,
 } from "@/db/models/index.js";
 import type { IJobQueue } from "../infrastructure/JobQueue.js";
 import ApiError from "@/utils/ApiError.js";
@@ -23,10 +24,16 @@ export interface ITeamService {
     user: ITokenizedUser,
     teamData: ITeam,
     roleId: string
-  ) => Promise<ITokenizedUser>;
+  ) => Promise<boolean>;
   getAll: (userId: string) => Promise<Partial<ITeam[]>>;
   getEditable: (userId: string) => Promise<Partial<ITeam[]>>;
-  delete: (teamId: string) => Promise<boolean>;
+  get: (teamId: string) => Promise<ITeam>;
+  update: (
+    user: IUserContext,
+    teamId: string,
+    teamData: Partial<ITeam>
+  ) => Promise<ITeam>;
+  delete: (orgId: string, teamId: string) => Promise<boolean>;
 }
 
 class TeamService implements ITeamService {
@@ -41,7 +48,8 @@ class TeamService implements ITeamService {
   create = async (user: ITokenizedUser, teamData: ITeam, roleId: string) => {
     try {
       const teamLiteral: Partial<ITeam> = {
-        ...teamData,
+        name: teamData.name,
+        description: teamData.description,
         orgId: new mongoose.Types.ObjectId(user.orgId),
       };
 
@@ -59,21 +67,7 @@ class TeamService implements ITeamService {
         roleId: new mongoose.Types.ObjectId(roleId),
       });
 
-      const teamMemberships = await TeamMembership.find({ userId: user.sub });
-      const teamMembershipIds = teamMemberships.map((tm) =>
-        tm.teamId.toString()
-      );
-      const teams = await Team.find({ _id: { $in: teamMembershipIds } }).select(
-        "_id name"
-      );
-
-      return {
-        sub: user.sub,
-        email: user.email,
-        orgId: user.orgId,
-        teamIds: teamMembershipIds,
-        teams,
-      };
+      return true;
     } catch (error) {
       throw error;
     }
@@ -122,8 +116,39 @@ class TeamService implements ITeamService {
     return teams;
   };
 
-  delete = async (teamId: string) => {
-    const team = await Team.findOne({ _id: teamId }).lean();
+  get = async (teamId: string) => {
+    const team = await Team.findOne({ _id: teamId });
+    if (!team) {
+      throw new ApiError("Team not found");
+    }
+    return team;
+  };
+
+  update = async (
+    user: IUserContext,
+    teamId: string,
+    teamData: Partial<ITeam>
+  ) => {
+    const updatedTeam = await Team.findOneAndUpdate(
+      { _id: teamId, orgId: user.orgId },
+      {
+        $set: {
+          ...teamData,
+          updatedAt: new Date(),
+          updatedBy: user.sub,
+        },
+      },
+      { new: true, runValidators: true }
+    );
+    if (!updatedTeam) {
+      throw new ApiError("Team not found");
+    }
+
+    return updatedTeam;
+  };
+
+  delete = async (orgId: string, teamId: string) => {
+    const team = await Team.findOne({ _id: teamId, orgId }).lean();
     if (!team) {
       throw new ApiError("Team not found");
     }

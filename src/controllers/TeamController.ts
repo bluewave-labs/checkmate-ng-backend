@@ -81,13 +81,38 @@ class TeamController implements ITeamController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const team = await this.teamService.get(req.params.id as string);
+      return res
+        .status(200)
+        .json({ message: "Team retrieved successfully", data: team });
     } catch (error) {
       next(error);
     }
   };
 
   update = async (req: Request, res: Response, next: NextFunction) => {
+    //TODO scope to team, user should only be able to delete teams they have permission for
     try {
+      const tokenizedUser = req.user;
+      if (!tokenizedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
+      const id = req.params.id;
+      if (!id) {
+        throw new ApiError("Monitor ID is required", 400);
+      }
+
+      const result = await this.teamService.update(tokenizedUser, id, req.body);
+      return res.status(200).json({
+        message: "Team updated successfully",
+        data: result,
+      });
     } catch (error) {
       next(error);
     }
@@ -98,7 +123,16 @@ class TeamController implements ITeamController {
       if (!teamId) {
         throw new ApiError("No team ID", 400);
       }
-      const success = await this.teamService.delete(teamId);
+
+      const tokenizedUser = req.user;
+      if (!tokenizedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const success = await this.teamService.delete(
+        tokenizedUser.orgId,
+        teamId
+      );
       if (!success) {
         throw new ApiError("Failed to delete team", 500);
       }
