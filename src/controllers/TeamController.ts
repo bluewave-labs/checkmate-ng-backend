@@ -53,22 +53,27 @@ class TeamController implements ITeamController {
   };
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
-    const tokenizedUser = req.user;
-    if (!tokenizedUser) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const userId = tokenizedUser.sub;
-    if (!userId) {
-      throw new ApiError("No user ID", 400);
-    }
-
-    const teams = await this.teamService.getAll(userId);
-    return res
-      .status(200)
-      .json({ message: "Teams retrieved successfully", data: teams });
-
     try {
+      const tokenizedUser = req.user;
+      if (!tokenizedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const userId = tokenizedUser.sub;
+      if (!userId) {
+        throw new ApiError("No user ID", 400);
+      }
+
+      const editable = req?.query?.editable === "true";
+      let teams;
+      if (editable) {
+        teams = await this.teamService.getEditable(userId);
+      }
+
+      teams = await this.teamService.getAll(userId);
+      return res
+        .status(200)
+        .json({ message: "Teams retrieved successfully", data: teams });
     } catch (error) {
       next(error);
     }
@@ -89,6 +94,17 @@ class TeamController implements ITeamController {
   };
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const teamId = req.params.id;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+      const success = await this.teamService.delete(teamId);
+      if (!success) {
+        throw new ApiError("Failed to delete team", 500);
+      }
+      return res.status(204).json({
+        message: "Team deleted successfully",
+      });
     } catch (error) {
       next(error);
     }

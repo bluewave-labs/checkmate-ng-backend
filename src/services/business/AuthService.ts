@@ -154,9 +154,6 @@ class AuthService implements IAuthService {
     }
 
     const orgRoles = await Role.findById(orgMembership.roleId).lean();
-    if (!orgRoles) {
-      throw new ApiError("Organization role not found");
-    }
 
     // Get teams
     const teamMembershipWithRoles = await TeamMembership.find({

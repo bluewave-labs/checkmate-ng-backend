@@ -5,14 +5,17 @@ import {
   Monitor,
   ISystemInfo,
   Role,
+  IRole,
   ITeam,
   Team,
   TeamMembership,
   ITokenizedUser,
   ITeamMembership,
+  OrgMembership,
 } from "@/db/models/index.js";
-import { MonitorType } from "@/db/models/monitors/Monitor.js";
-import { StatusResponse } from "../infrastructure/NetworkService.js";
+import type { IJobQueue } from "../infrastructure/JobQueue.js";
+import { ApiError } from "@/utils/ApiError.js";
+import { PERMISSIONS } from "@/services/business/AuthService.js";
 
 const SERVICE_NAME = "TeamService";
 export interface ITeamService {
@@ -22,12 +25,17 @@ export interface ITeamService {
     roleId: string
   ) => Promise<ITokenizedUser>;
   getAll: (userId: string) => Promise<Partial<ITeam[]>>;
+  getEditable: (userId: string) => Promise<Partial<ITeam[]>>;
+  delete: (teamId: string) => Promise<boolean>;
 }
 
 class TeamService implements ITeamService {
   public SERVICE_NAME: string;
-  constructor() {
+  private jobQueue: IJobQueue;
+
+  constructor(jobQueue: IJobQueue) {
     this.SERVICE_NAME = SERVICE_NAME;
+    this.jobQueue = jobQueue;
   }
 
   create = async (user: ITokenizedUser, teamData: ITeam, roleId: string) => {
@@ -78,6 +86,51 @@ class TeamService implements ITeamService {
       "_id name description"
     );
     return teams;
+  };
+
+  getEditable = async (userId: string) => {
+    const [orgMembership, teamMemberships] = await Promise.all([
+      OrgMembership.findOne({ userId })
+        .populate<{ roleId: IRole }>("roleId")
+        .lean(),
+      TeamMembership.find({ userId })
+        .populate<{ roleId: IRole }>("roleId")
+        .lean(),
+    ]);
+
+    const orgPermissions = orgMembership?.roleId?.permissions || [];
+
+    const filteredTeamMembership = teamMemberships
+      .filter((tm) => {
+        if (
+          orgPermissions.includes(PERMISSIONS.teams.all) ||
+          orgPermissions.includes(PERMISSIONS.teams.write)
+        ) {
+          return true;
+        }
+
+        const teamPermissions = tm.roleId?.permissions || [];
+        const hasEditPermission =
+          teamPermissions.includes(PERMISSIONS.teams.all) ||
+          teamPermissions.includes(PERMISSIONS.teams.write);
+        return hasEditPermission;
+      })
+      .map((tm) => tm.teamId);
+    const teams = await Team.find({
+      _id: { $in: filteredTeamMembership },
+    }).select("_id name description");
+    return teams;
+  };
+
+  delete = async (teamId: string) => {
+    // Delete team memberships
+    await TeamMembership.deleteOne({ teamId });
+    const monitors = await Monitor.find({ teamId });
+    monitors.forEach(async (monitor) => {
+      await this.jobQueue.deleteJob(monitor);
+    });
+    await Monitor.deleteMany({ teamId });
+    return true;
   };
 }
 

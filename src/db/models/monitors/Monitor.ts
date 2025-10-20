@@ -104,6 +104,25 @@ MonitorSchema.pre(
   }
 );
 
+MonitorSchema.pre(
+  "deleteMany",
+  { document: false, query: true },
+  async function (next) {
+    try {
+      const filter = this.getFilter();
+      const monitors = await this.model.find(filter).select("_id");
+      const monitorIds = monitors.map((m) => m._id);
+      if (monitorIds.length > 0) {
+        await Check.deleteMany({ "metadata.monitorId": { $in: monitorIds } });
+        await MonitorStats.deleteMany({ monitorId: { $in: monitorIds } });
+      }
+      next();
+    } catch (error: any) {
+      next(error);
+    }
+  }
+);
+
 MonitorSchema.index({ isActive: 1 });
 MonitorSchema.index({ status: 1 });
 MonitorSchema.index({ type: 1 });

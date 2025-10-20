@@ -47,7 +47,7 @@ export const initServices = async () => {
   const authService = new AuthService(jobQueue);
   const monitorService = new MonitorService(jobQueue);
   const queueService = new QueueService(jobQueue);
-  const teamService = new TeamService();
+  const teamService = new TeamService(jobQueue);
 
   const services = {
     checkService,
