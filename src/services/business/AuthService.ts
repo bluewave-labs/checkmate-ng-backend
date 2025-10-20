@@ -239,6 +239,8 @@ class AuthService implements IAuthService {
             PERMISSIONS.statusPages.write,
             PERMISSIONS.notifications.read,
             PERMISSIONS.notifications.write,
+            PERMISSIONS.teams.read,
+            PERMISSIONS.teams.write,
           ],
         },
         {
@@ -248,6 +250,7 @@ class AuthService implements IAuthService {
             PERMISSIONS.monitors.all,
             PERMISSIONS.statusPages.all,
             PERMISSIONS.notifications.all,
+            PERMISSIONS.teams.all,
           ],
           scope: "team",
         },
@@ -275,6 +278,7 @@ class AuthService implements IAuthService {
         name: "Default Team",
         orgId: org._id,
         description: "This is your default team",
+        isSystem: true,
       });
       created.team = team._id;
 

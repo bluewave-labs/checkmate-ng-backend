@@ -14,7 +14,7 @@ import {
   OrgMembership,
 } from "@/db/models/index.js";
 import type { IJobQueue } from "../infrastructure/JobQueue.js";
-import { ApiError } from "@/utils/ApiError.js";
+import ApiError from "@/utils/ApiError.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
 
 const SERVICE_NAME = "TeamService";
@@ -123,8 +123,21 @@ class TeamService implements ITeamService {
   };
 
   delete = async (teamId: string) => {
+    const team = await Team.findOne({ _id: teamId }).lean();
+    if (!team) {
+      throw new ApiError("Team not found");
+    }
+
+    if (team.isSystem) {
+      throw new ApiError("Cannot delete your default team");
+    }
+
     // Delete team memberships
     await TeamMembership.deleteOne({ teamId });
+
+    // Delete team
+    await Team.deleteOne({ _id: teamId });
+
     const monitors = await Monitor.find({ teamId });
     monitors.forEach(async (monitor) => {
       await this.jobQueue.deleteJob(monitor);
