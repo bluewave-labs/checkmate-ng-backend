@@ -84,6 +84,13 @@ export const PERMISSIONS = {
     update: "teams.update",
     delete: "teams.delete",
   },
+  roles: {
+    all: "roles.*",
+    write: "roles.write",
+    read: "roles.read",
+    update: "roles.update",
+    delete: "roles.delete",
+  },
 };
 
 export type RegisterData = {
@@ -185,7 +192,7 @@ class AuthService implements IAuthService {
       lastName: user.lastName,
       org: {
         name: org.name,
-        permissions: orgRoles?.permissions,
+        permissions: orgRoles?.permissions || [],
       },
       teams: returnableTeams,
     };
@@ -241,6 +248,8 @@ class AuthService implements IAuthService {
             PERMISSIONS.notifications.write,
             PERMISSIONS.teams.read,
             PERMISSIONS.teams.write,
+            PERMISSIONS.roles.read,
+            PERMISSIONS.roles.write,
           ],
         },
         {
@@ -251,6 +260,7 @@ class AuthService implements IAuthService {
             PERMISSIONS.statusPages.all,
             PERMISSIONS.notifications.all,
             PERMISSIONS.teams.all,
+            PERMISSIONS.roles.all,
           ],
           scope: "team",
         },

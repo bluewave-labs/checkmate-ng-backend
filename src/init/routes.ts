@@ -7,6 +7,7 @@ import {
   NotificationChannelRoutes,
   QueueRoutes,
   TeamRoutes,
+  RoleRoutes,
 } from "@/routes/index.js";
 export const initRoutes = (controllers: any, app: Express) => {
   const authRoutes = new AuthRoutes(controllers.authController);
@@ -20,6 +21,7 @@ export const initRoutes = (controllers: any, app: Express) => {
   );
   const queueRoutes = new QueueRoutes(controllers.queueController);
   const teamRoutes = new TeamRoutes(controllers.teamController);
+  const roleRoutes = new RoleRoutes(controllers.roleController);
 
   app.use("/api/v1/auth", authRoutes.getRouter());
   app.use("/api/v1/invite", inviteRoutes.getRouter());
@@ -31,4 +33,5 @@ export const initRoutes = (controllers: any, app: Express) => {
   );
   app.use("/api/v1/queue", queueRoutes.getRouter());
   app.use("/api/v1/teams", teamRoutes.getRouter());
+  app.use("/api/v1/roles", roleRoutes.getRouter());
 };

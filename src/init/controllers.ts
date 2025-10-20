@@ -6,6 +6,7 @@ import {
   NotificationChannelController,
   QueueController,
   TeamController,
+  RoleController,
 } from "@/controllers/index.js";
 
 export const initControllers = (services: any) => {
@@ -29,5 +30,7 @@ export const initControllers = (services: any) => {
   controllers.queueController = new QueueController(services.jobQueue);
 
   controllers.teamController = new TeamController(services.teamService);
+
+  controllers.roleController = new RoleController(services.roleService);
   return controllers;
 };
