@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { MaintenanceController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
-import { verifyPermission } from "@/middleware/VerifyPermissions.js";
+import { verifyTeamPermission } from "@/middleware/VerifyTeamPermission.js";
 import { addUserContext } from "@/middleware/AddUserContext.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
 
@@ -19,7 +19,7 @@ class MaintenanceRoutes {
       "/",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.maintenance.write]),
+      verifyTeamPermission([PERMISSIONS.maintenance.write]),
       this.controller.create
     );
 
@@ -27,7 +27,7 @@ class MaintenanceRoutes {
       "/",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.maintenance.read]),
+      verifyTeamPermission([PERMISSIONS.maintenance.read]),
       this.controller.getAll
     );
 
@@ -35,7 +35,7 @@ class MaintenanceRoutes {
       "/:id/active",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.maintenance.update]),
+      verifyTeamPermission([PERMISSIONS.maintenance.update]),
       this.controller.toggleActive
     );
 
@@ -43,7 +43,7 @@ class MaintenanceRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.maintenance.update]),
+      verifyTeamPermission([PERMISSIONS.maintenance.update]),
       this.controller.update
     );
 
@@ -51,7 +51,7 @@ class MaintenanceRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.maintenance.read]),
+      verifyTeamPermission([PERMISSIONS.maintenance.read]),
       this.controller.get
     );
 
@@ -59,7 +59,7 @@ class MaintenanceRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.maintenance.delete]),
+      verifyTeamPermission([PERMISSIONS.maintenance.delete]),
       this.controller.delete
     );
   };

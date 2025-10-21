@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { InviteController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
-import { verifyPermission } from "@/middleware/VerifyPermissions.js";
+import { verifyTeamPermission } from "@/middleware/VerifyTeamPermission.js";
 import { addUserContext } from "@/middleware/AddUserContext.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
 
@@ -19,7 +19,7 @@ class InviteRoutes {
       "/",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.invite.write]),
+      verifyTeamPermission([PERMISSIONS.invite.write]),
       this.controller.create
     );
 
@@ -27,7 +27,7 @@ class InviteRoutes {
       "/",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.invite.read]),
+      verifyTeamPermission([PERMISSIONS.invite.read]),
       this.controller.getAll
     );
 
@@ -35,7 +35,7 @@ class InviteRoutes {
       "/:token",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.invite.read]),
+      verifyTeamPermission([PERMISSIONS.invite.read]),
       this.controller.get
     );
 
@@ -43,7 +43,7 @@ class InviteRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.invite.delete]),
+      verifyTeamPermission([PERMISSIONS.invite.delete]),
       this.controller.delete
     );
   };

@@ -20,17 +20,17 @@ class TeamController implements ITeamController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokenizedUser = req.user;
-      if (!tokenizedUser) {
+      const userContext = req.user;
+      if (!userContext) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const orgId = tokenizedUser.orgId;
+      const orgId = userContext.orgId;
       if (!orgId) {
         throw new ApiError("No organization ID", 400);
       }
 
-      const userId = tokenizedUser.sub;
+      const userId = userContext.sub;
       if (!userId) {
         throw new ApiError("No user ID", 400);
       }
@@ -42,7 +42,7 @@ class TeamController implements ITeamController {
 
       invalidateCachesForUser(userId);
 
-      await this.teamService.create(tokenizedUser, req.body, roleId);
+      await this.teamService.create(orgId, userId, req.body, roleId);
 
       return res.status(201).json({
         message: "Team created successfully",
@@ -54,23 +54,28 @@ class TeamController implements ITeamController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokenizedUser = req.user;
-      if (!tokenizedUser) {
+      const userContext = req.user;
+      if (!userContext) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const userId = tokenizedUser.sub;
+      const userId = userContext.sub;
       if (!userId) {
         throw new ApiError("No user ID", 400);
+      }
+
+      const orgId = userContext.orgId;
+      if (!orgId) {
+        throw new ApiError("No organization ID", 400);
       }
 
       const editable = req?.query?.editable === "true";
       let teams;
       if (editable) {
-        teams = await this.teamService.getEditable(userId);
+        teams = await this.teamService.getEditable(userId, orgId);
       }
 
-      teams = await this.teamService.getAll(userId);
+      teams = await this.teamService.getAll(userId, orgId);
       return res
         .status(200)
         .json({ message: "Teams retrieved successfully", data: teams });
@@ -81,7 +86,21 @@ class TeamController implements ITeamController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const team = await this.teamService.get(req.params.id as string);
+      const userContext = req.user;
+      if (!userContext) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const teamId = req.params.id;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
+      const orgId = userContext.orgId;
+      if (!orgId) {
+        throw new ApiError("No organization ID", 400);
+      }
+
+      const team = await this.teamService.get(teamId, orgId);
       return res
         .status(200)
         .json({ message: "Team retrieved successfully", data: team });
@@ -91,16 +110,10 @@ class TeamController implements ITeamController {
   };
 
   update = async (req: Request, res: Response, next: NextFunction) => {
-    //TODO scope to team, user should only be able to delete teams they have permission for
     try {
-      const tokenizedUser = req.user;
-      if (!tokenizedUser) {
+      const userContext = req.user;
+      if (!userContext) {
         return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const teamId = tokenizedUser.currentTeamId;
-      if (!teamId) {
-        throw new ApiError("No team ID", 400);
       }
 
       const id = req.params.id;
@@ -108,7 +121,7 @@ class TeamController implements ITeamController {
         throw new ApiError("Monitor ID is required", 400);
       }
 
-      const result = await this.teamService.update(tokenizedUser, id, req.body);
+      const result = await this.teamService.update(userContext, id, req.body);
       return res.status(200).json({
         message: "Team updated successfully",
         data: result,
@@ -117,6 +130,7 @@ class TeamController implements ITeamController {
       next(error);
     }
   };
+
   delete = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const teamId = req.params.id;

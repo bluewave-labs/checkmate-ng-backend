@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { NotificationChannelController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
-import { verifyPermission } from "@/middleware/VerifyPermissions.js";
+import { verifyTeamPermission } from "@/middleware/VerifyTeamPermission.js";
 import { addUserContext } from "@/middleware/AddUserContext.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
 class NotificationChannelRoutes {
@@ -18,7 +18,7 @@ class NotificationChannelRoutes {
       "/",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.notifications.write]),
+      verifyTeamPermission([PERMISSIONS.notifications.write]),
       this.controller.create
     );
 
@@ -26,7 +26,7 @@ class NotificationChannelRoutes {
       "/",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.notifications.read]),
+      verifyTeamPermission([PERMISSIONS.notifications.read]),
       this.controller.getAll
     );
 
@@ -34,7 +34,7 @@ class NotificationChannelRoutes {
       "/:id/active",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.notifications.write]),
+      verifyTeamPermission([PERMISSIONS.notifications.write]),
       this.controller.toggleActive
     );
 
@@ -42,7 +42,7 @@ class NotificationChannelRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.notifications.update]),
+      verifyTeamPermission([PERMISSIONS.notifications.update]),
       this.controller.update
     );
 
@@ -50,7 +50,7 @@ class NotificationChannelRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.notifications.read]),
+      verifyTeamPermission([PERMISSIONS.notifications.read]),
       this.controller.get
     );
 
@@ -58,7 +58,7 @@ class NotificationChannelRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.notifications.delete]),
+      verifyTeamPermission([PERMISSIONS.notifications.delete]),
       this.controller.delete
     );
   };

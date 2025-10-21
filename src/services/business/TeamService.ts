@@ -21,13 +21,14 @@ import { PERMISSIONS } from "@/services/business/AuthService.js";
 const SERVICE_NAME = "TeamService";
 export interface ITeamService {
   create: (
-    user: ITokenizedUser,
+    orgId: string,
+    userId: string,
     teamData: ITeam,
     roleId: string
   ) => Promise<boolean>;
-  getAll: (userId: string) => Promise<Partial<ITeam[]>>;
-  getEditable: (userId: string) => Promise<Partial<ITeam[]>>;
-  get: (teamId: string) => Promise<ITeam>;
+  getAll: (userId: string, orgId: string) => Promise<Partial<ITeam[]>>;
+  getEditable: (userId: string, orgId: string) => Promise<Partial<ITeam[]>>;
+  get: (teamId: string, orgId: string) => Promise<ITeam>;
   update: (
     user: IUserContext,
     teamId: string,
@@ -45,46 +46,60 @@ class TeamService implements ITeamService {
     this.jobQueue = jobQueue;
   }
 
-  create = async (user: ITokenizedUser, teamData: ITeam, roleId: string) => {
+  create = async (
+    orgId: string,
+    userId: string,
+    teamData: ITeam,
+    roleId: string
+  ) => {
+    const created: Record<string, any> = {
+      team: null,
+      memberships: null,
+    };
+
     try {
       const teamLiteral: Partial<ITeam> = {
         name: teamData.name,
         description: teamData.description,
-        orgId: new mongoose.Types.ObjectId(user.orgId),
+        orgId: new mongoose.Types.ObjectId(orgId),
       };
 
       // Check for roles
-      const roles = await Role.find({ organizationId: user.orgId });
+      const roles = await Role.find({ organizationId: orgId });
 
       if (!roles.some((r) => r._id.toString() === roleId)) {
         throw new Error("Role does not exist");
       }
 
       const team = await Team.create(teamLiteral);
-      await TeamMembership.create({
+      created.teamId = team._id;
+      const membership = await TeamMembership.create({
         teamId: team._id,
-        userId: new mongoose.Types.ObjectId(user.sub),
+        userId: new mongoose.Types.ObjectId(userId),
         roleId: new mongoose.Types.ObjectId(roleId),
       });
+      created.teamMembershipId = membership._id;
 
       return true;
     } catch (error) {
+      await Team.deleteOne({ _id: created.teamId });
+      await TeamMembership.deleteOne({ _id: created.teamMembershipId });
       throw error;
     }
   };
 
-  getAll = async (userId: string) => {
+  getAll = async (userId: string, orgId: string) => {
     const teamMemberships = await TeamMembership.find({ userId });
     const teamIds = teamMemberships.map((tm) => tm.teamId.toString());
-    const teams = await Team.find({ _id: { $in: teamIds } }).select(
+    const teams = await Team.find({ _id: { $in: teamIds }, orgId }).select(
       "_id name description"
     );
     return teams;
   };
 
-  getEditable = async (userId: string) => {
+  getEditable = async (userId: string, orgId: string) => {
     const [orgMembership, teamMemberships] = await Promise.all([
-      OrgMembership.findOne({ userId })
+      OrgMembership.findOne({ userId, orgId })
         .populate<{ roleId: IRole }>("roleId")
         .lean(),
       TeamMembership.find({ userId })
@@ -112,12 +127,13 @@ class TeamService implements ITeamService {
       .map((tm) => tm.teamId);
     const teams = await Team.find({
       _id: { $in: filteredTeamMembership },
+      orgId,
     }).select("_id name description");
     return teams;
   };
 
-  get = async (teamId: string) => {
-    const team = await Team.findOne({ _id: teamId });
+  get = async (teamId: string, orgId: string) => {
+    const team = await Team.findOne({ _id: teamId, orgId });
     if (!team) {
       throw new ApiError("Team not found");
     }
@@ -157,17 +173,15 @@ class TeamService implements ITeamService {
       throw new ApiError("Cannot delete your default team");
     }
 
-    // Delete team memberships
-    await TeamMembership.deleteOne({ teamId });
-
-    // Delete team
-    await Team.deleteOne({ _id: teamId });
+    await TeamMembership.deleteMany({ teamId });
 
     const monitors = await Monitor.find({ teamId });
-    monitors.forEach(async (monitor) => {
-      await this.jobQueue.deleteJob(monitor);
-    });
+    await Promise.all(
+      monitors.map((monitor) => this.jobQueue.deleteJob(monitor))
+    );
+
     await Monitor.deleteMany({ teamId });
+    await Team.deleteOne({ _id: teamId });
     return true;
   };
 }

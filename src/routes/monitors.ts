@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { MonitorController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
-import { verifyPermission } from "@/middleware/VerifyPermissions.js";
+import { verifyTeamPermission } from "@/middleware/VerifyTeamPermission.js";
 import { addUserContext } from "@/middleware/AddUserContext.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
 
@@ -19,7 +19,7 @@ class MonitorRoutes {
       "/",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.monitors.write]),
+      verifyTeamPermission([PERMISSIONS.monitors.write]),
       this.controller.create
     );
 
@@ -27,7 +27,7 @@ class MonitorRoutes {
       "/",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.monitors.read]),
+      verifyTeamPermission([PERMISSIONS.monitors.read]),
       this.controller.getAll
     );
 
@@ -35,7 +35,7 @@ class MonitorRoutes {
       "/:id/checks",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.monitors.read]),
+      verifyTeamPermission([PERMISSIONS.monitors.read]),
       this.controller.getChecks
     );
 
@@ -43,7 +43,7 @@ class MonitorRoutes {
       "/:id/active",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.monitors.write]),
+      verifyTeamPermission([PERMISSIONS.monitors.write]),
       this.controller.toggleActive
     );
 
@@ -51,7 +51,7 @@ class MonitorRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.monitors.read]),
+      verifyTeamPermission([PERMISSIONS.monitors.read]),
       this.controller.get
     );
 
@@ -59,7 +59,7 @@ class MonitorRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.monitors.write]),
+      verifyTeamPermission([PERMISSIONS.monitors.write]),
       this.controller.update
     );
 
@@ -67,7 +67,7 @@ class MonitorRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.monitors.delete]),
+      verifyTeamPermission([PERMISSIONS.monitors.delete]),
       this.controller.delete
     );
   };

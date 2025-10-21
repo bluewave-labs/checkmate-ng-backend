@@ -3,7 +3,10 @@ import { Router } from "express";
 import { TeamController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
 import { addUserContext } from "@/middleware/AddUserContext.js";
-import { verifyPermission } from "@/middleware/VerifyPermissions.js";
+import {
+  verifyOrgPermission,
+  verifyTargetTeamPermission,
+} from "@/middleware/VerifyTeamPermission.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
 
 class TeamRoutes {
@@ -20,7 +23,7 @@ class TeamRoutes {
       "/",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.teams.write]),
+      verifyOrgPermission([PERMISSIONS.teams.write]),
       this.controller.create
     );
 
@@ -30,7 +33,7 @@ class TeamRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.teams.read]),
+      verifyTargetTeamPermission([PERMISSIONS.teams.read]),
       this.controller.get
     );
 
@@ -38,7 +41,7 @@ class TeamRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.teams.write]),
+      verifyTargetTeamPermission([PERMISSIONS.teams.write]),
       this.controller.update
     );
 
@@ -46,7 +49,7 @@ class TeamRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.teams.delete]),
+      verifyTargetTeamPermission([PERMISSIONS.teams.delete]),
       this.controller.delete
     );
   };

@@ -3,7 +3,7 @@ import { Router } from "express";
 import { RoleController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
 import { addUserContext } from "@/middleware/AddUserContext.js";
-import { verifyPermission } from "@/middleware/VerifyPermissions.js";
+import { verifyTeamPermission } from "@/middleware/VerifyTeamPermission.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
 
 class RoleRoutes {
@@ -20,7 +20,7 @@ class RoleRoutes {
       "/",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.roles.read]),
+      verifyTeamPermission([PERMISSIONS.roles.read]),
       this.controller.getAll
     );
 
@@ -28,7 +28,7 @@ class RoleRoutes {
       "/:id",
       verifyToken,
       addUserContext,
-      verifyPermission([PERMISSIONS.roles.read]),
+      verifyTeamPermission([PERMISSIONS.roles.read]),
       this.controller.get
     );
   };
