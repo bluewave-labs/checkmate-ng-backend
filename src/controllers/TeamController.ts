@@ -5,7 +5,8 @@ import { invalidateCachesForUser } from "@/middleware/AddUserContext.js";
 
 export interface ITeamController {
   create: (req: Request, res: Response, next: NextFunction) => void;
-  getAll: (req: Request, res: Response, next: NextFunction) => void;
+  getOrg: (req: Request, res: Response, next: NextFunction) => void;
+  getJoined: (req: Request, res: Response, next: NextFunction) => void;
   get: (req: Request, res: Response, next: NextFunction) => void;
   update: (req: Request, res: Response, next: NextFunction) => void;
   delete: (req: Request, res: Response, next: NextFunction) => void;
@@ -51,7 +52,7 @@ class TeamController implements ITeamController {
     }
   };
 
-  getAll = async (req: Request, res: Response, next: NextFunction) => {
+  getOrg = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userContext = req.user;
       if (!userContext) {
@@ -68,13 +69,34 @@ class TeamController implements ITeamController {
         throw new ApiError("No organization ID", 400);
       }
 
-      const editable = req?.query?.editable === "true";
-      let teams;
-      if (editable) {
-        teams = await this.teamService.getEditable(userId, orgId);
-      } else {
-        teams = await this.teamService.getAll(userId, orgId);
+      const teams = await this.teamService.getOrg(orgId);
+
+      return res
+        .status(200)
+        .json({ message: "Teams retrieved successfully", data: teams });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getJoined = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userContext = req.user;
+      if (!userContext) {
+        return res.status(401).json({ message: "Unauthorized" });
       }
+
+      const userId = userContext.sub;
+      if (!userId) {
+        throw new ApiError("No user ID", 400);
+      }
+
+      const orgId = userContext.orgId;
+      if (!orgId) {
+        throw new ApiError("No organization ID", 400);
+      }
+
+      const teams = await this.teamService.getJoined(orgId, userId);
 
       return res
         .status(200)

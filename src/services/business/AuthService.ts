@@ -259,8 +259,6 @@ class AuthService implements IAuthService {
             PERMISSIONS.monitors.all,
             PERMISSIONS.statusPages.all,
             PERMISSIONS.notifications.all,
-            PERMISSIONS.teams.all,
-            PERMISSIONS.roles.all,
           ],
           scope: "team",
         },
@@ -293,6 +291,7 @@ class AuthService implements IAuthService {
       created.team = team._id;
 
       const teamMembership = await TeamMembership.create({
+        orgId: org._id,
         userId: user._id,
         teamId: team._id,
         roleId: roles[2]?._id,
@@ -402,6 +401,7 @@ class AuthService implements IAuthService {
           )
         ) {
           const newTeamMembership = await TeamMembership.create({
+            orgId: orgId,
             userId: user._id,
             teamId,
             roleId: teamRole,
@@ -431,6 +431,7 @@ class AuthService implements IAuthService {
 
         // Create teamMembership
         const newTeamMembership = await TeamMembership.create({
+          orgId: orgId,
           userId: user._id,
           teamId,
           roleId: teamRole,

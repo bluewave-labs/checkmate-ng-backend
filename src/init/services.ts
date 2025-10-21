@@ -20,6 +20,7 @@ import {
   ServiceRegistry,
   TeamService,
   RoleService,
+  TeamMemberService,
 } from "@/services/index.js";
 
 export const initServices = async () => {
@@ -50,6 +51,7 @@ export const initServices = async () => {
   const queueService = new QueueService(jobQueue);
   const teamService = new TeamService(jobQueue);
   const roleService = new RoleService();
+  const teamMemberService = new TeamMemberService();
 
   const services = {
     checkService,
@@ -72,6 +74,7 @@ export const initServices = async () => {
     queueService,
     teamService,
     roleService,
+    teamMemberService,
   };
 
   Object.values(services).forEach((service) => {

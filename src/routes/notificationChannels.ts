@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { NotificationChannelController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
-import { verifyTeamPermission } from "@/middleware/VerifyTeamPermission.js";
+import { verifyTeamPermission } from "@/middleware/VerifyPermission.js";
 import { addUserContext } from "@/middleware/AddUserContext.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
 class NotificationChannelRoutes {

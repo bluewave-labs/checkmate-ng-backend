@@ -5,6 +5,7 @@ import ApiError from "@/utils/ApiError.js";
 const SERVICE_NAME = "RoleService";
 export interface IRoleService {
   getAll: (orgId: string, type: string) => Promise<Partial<IRole[]>>;
+  getTeam: (orgId: string, teamId: string) => Promise<Partial<IRole[]>>;
   get: (roleId: string) => Promise<IRole>;
 }
 
@@ -17,6 +18,15 @@ class RoleService implements IRoleService {
 
   getAll = async (orgId: string, type: string) => {
     const roles = await Role.find({ organizationId: orgId, scope: type });
+    return roles;
+  };
+
+  getTeam = async (orgId: string, teamId: string) => {
+    const roles = await Role.find({
+      organizationId: orgId,
+      teamId,
+      scope: "team",
+    });
     return roles;
   };
 

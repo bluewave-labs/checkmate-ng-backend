@@ -1,16 +1,16 @@
 import { Router } from "express";
 
-import { TeamController } from "@/controllers/index.js";
+import { TeamMemberController } from "@/controllers/index.js";
 import { verifyToken } from "@/middleware/VerifyToken.js";
 import { addUserContext } from "@/middleware/AddUserContext.js";
 import { verifyOrgPermission } from "@/middleware/VerifyPermission.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
 
-class TeamRoutes {
-  private controller: TeamController;
+class TeamMemberRoutes {
+  private controller: TeamMemberController;
   private router: Router;
-  constructor(teamController: TeamController) {
-    this.controller = teamController;
+  constructor(teamMemberController: TeamMemberController) {
+    this.controller = teamMemberController;
     this.router = Router();
     this.initRoutes();
   }
@@ -24,8 +24,7 @@ class TeamRoutes {
       this.controller.create
     );
 
-    this.router.get("/", verifyToken, this.controller.getOrg);
-    this.router.get("/joined", verifyToken, this.controller.getJoined);
+    this.router.get("/", verifyToken, addUserContext, this.controller.getAll);
 
     this.router.get(
       "/:id",
@@ -57,4 +56,4 @@ class TeamRoutes {
   }
 }
 
-export default TeamRoutes;
+export default TeamMemberRoutes;

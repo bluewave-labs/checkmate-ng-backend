@@ -50,42 +50,6 @@ const verifyTeamPermission = (resourceActions: string[]) => {
   };
 };
 
-const verifyTargetTeamPermission = (resourceActions: string[]) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    const tokenizedUser = req.user;
-
-    if (!tokenizedUser) {
-      throw new ApiError("No user", 400);
-    }
-
-    const userId = tokenizedUser.sub;
-    if (!userId) {
-      throw new ApiError("No user ID", 400);
-    }
-
-    const teamId = req.params.id;
-    if (!teamId) {
-      throw new ApiError("No team ID", 400);
-    }
-
-    const orgPermissions = tokenizedUser.roles?.orgRole?.permissions || [];
-
-    const teamMembership = await TeamMembership.findOne({
-      userId,
-      teamId,
-    }).populate<{ roleId: IRole }>("roleId");
-    const teamPermissions = teamMembership?.roleId?.permissions || [];
-
-    const allPermissions = [...orgPermissions, ...teamPermissions];
-
-    const allowed = hasPermission(allPermissions, resourceActions);
-    if (!allowed) {
-      throw new ApiError("Insufficient permissions", 403);
-    }
-    next();
-  };
-};
-
 const verifyOrgPermission = (resourceActions: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const userContext = req.user;
@@ -103,8 +67,4 @@ const verifyOrgPermission = (resourceActions: string[]) => {
   };
 };
 
-export {
-  verifyTeamPermission,
-  verifyTargetTeamPermission,
-  verifyOrgPermission,
-};
+export { verifyTeamPermission, verifyOrgPermission };

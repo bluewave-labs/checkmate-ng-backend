@@ -6,3 +6,4 @@ export { default as NotificationChannelController } from "./NotificationChannelC
 export { default as QueueController } from "./QueueController.js";
 export { default as TeamController } from "./TeamController.js";
 export { default as RoleController } from "./RoleController.js";
+export { default as TeamMemberController } from "./TeamMemberController.js";

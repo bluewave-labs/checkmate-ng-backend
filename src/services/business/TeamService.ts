@@ -21,8 +21,8 @@ export interface ITeamService {
     teamData: ITeam,
     roleId: string
   ) => Promise<boolean>;
-  getAll: (userId: string, orgId: string) => Promise<Partial<ITeam[]>>;
-  getEditable: (userId: string, orgId: string) => Promise<Partial<ITeam[]>>;
+  getOrg: (orgId: string) => Promise<Partial<ITeam[]>>;
+  getJoined: (teamId: string, orgId: string) => Promise<Partial<ITeam[]>>;
   get: (teamId: string, orgId: string) => Promise<ITeam>;
   update: (
     user: IUserContext,
@@ -70,6 +70,7 @@ class TeamService implements ITeamService {
       created.teamId = team._id;
       const membership = await TeamMembership.create({
         teamId: team._id,
+        orgId: new mongoose.Types.ObjectId(orgId),
         userId: new mongoose.Types.ObjectId(userId),
         roleId: new mongoose.Types.ObjectId(roleId),
       });
@@ -83,47 +84,22 @@ class TeamService implements ITeamService {
     }
   };
 
-  getAll = async (userId: string, orgId: string) => {
-    const teamMemberships = await TeamMembership.find({ userId });
-    const teamIds = teamMemberships.map((tm) => tm.teamId.toString());
-    const teams = await Team.find({ _id: { $in: teamIds }, orgId }).select(
-      "_id name description"
-    );
+  getOrg = async (orgId: string) => {
+    const teams = await Team.find({ orgId }).select("_id name description");
     return teams;
   };
 
-  getEditable = async (userId: string, orgId: string) => {
-    const [orgMembership, teamMemberships] = await Promise.all([
-      OrgMembership.findOne({ userId, orgId })
-        .populate<{ roleId: IRole }>("roleId")
-        .lean(),
-      TeamMembership.find({ userId })
-        .populate<{ roleId: IRole }>("roleId")
-        .lean(),
-    ]);
-
-    const orgPermissions = orgMembership?.roleId?.permissions || [];
-
-    const filteredTeamMembership = teamMemberships
-      .filter((tm) => {
-        if (
-          orgPermissions.includes(PERMISSIONS.teams.all) ||
-          orgPermissions.includes(PERMISSIONS.teams.write)
-        ) {
-          return true;
-        }
-
-        const teamPermissions = tm.roleId?.permissions || [];
-        const hasEditPermission =
-          teamPermissions.includes(PERMISSIONS.teams.all) ||
-          teamPermissions.includes(PERMISSIONS.teams.write);
-        return hasEditPermission;
-      })
-      .map((tm) => tm.teamId);
-    const teams = await Team.find({
-      _id: { $in: filteredTeamMembership },
+  getJoined = async (orgId: string, userId: string) => {
+    const teamMemberships = await TeamMembership.find({
       orgId,
-    }).select("_id name description");
+      userId,
+    }).select("teamId");
+
+    const teamIds = teamMemberships.map((tm) => tm.teamId);
+
+    const teams = await Team.find({ _id: { $in: teamIds }, orgId }).select(
+      "_id name description"
+    );
     return teams;
   };
 

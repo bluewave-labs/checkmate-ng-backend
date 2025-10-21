@@ -7,7 +7,9 @@ import {
   QueueController,
   TeamController,
   RoleController,
+  TeamMemberController,
 } from "@/controllers/index.js";
+import { Team } from "@/db/models/index.js";
 
 export const initControllers = (services: any) => {
   const controllers: Record<string, any> = {};
@@ -32,5 +34,9 @@ export const initControllers = (services: any) => {
   controllers.teamController = new TeamController(services.teamService);
 
   controllers.roleController = new RoleController(services.roleService);
+
+  controllers.teamMemberController = new TeamMemberController(
+    services.teamMemberService
+  );
   return controllers;
 };
