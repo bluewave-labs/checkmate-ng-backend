@@ -10,12 +10,31 @@ class InviteController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokenizedUser = req.user;
-      if (!tokenizedUser) {
-        return res.status(401).json({ message: "Unauthorized" });
+      const userContext = req.user;
+
+      if (!userContext) {
+        throw new ApiError("Unauthorized", 401);
       }
 
-      const invite = await this.inviteService.create(tokenizedUser, req.body);
+      const userId = userContext.sub;
+      if (!userId) {
+        throw new ApiError("No user ID in context", 400);
+      }
+
+      const orgId = userContext.orgId;
+      if (!orgId) {
+        throw new ApiError("No organization ID", 400);
+      }
+
+      const { email, teamId, teamRoleId } = req.body;
+
+      const invite = await this.inviteService.create(
+        userId,
+        email,
+        orgId,
+        teamId,
+        teamRoleId
+      );
       res.status(201).json({ message: "OK", data: invite });
     } catch (error: any) {
       next(error);

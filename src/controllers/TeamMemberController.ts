@@ -31,7 +31,6 @@ class TeamMemberController implements ITeamMemberController {
       }
 
       const tm = await this.teamMemberService.create(orgId, req.body);
-
       return res.status(201).json({
         message: "Team member created successfully",
         data: tm,

@@ -22,9 +22,8 @@ import {
 import ApiError from "@/utils/ApiError.js";
 import mongoose, { Types } from "mongoose";
 import { IJobQueue } from "../infrastructure/JobQueue.js";
-import { sign } from "crypto";
 import { hashPassword } from "@/utils/JWTUtils.js";
-import { create } from "domain";
+import { invalidateCachesForUser } from "@/middleware/AddUserContext.js";
 
 const SERVICE_NAME = "AuthServiceV2";
 
@@ -250,6 +249,8 @@ class AuthService implements IAuthService {
             PERMISSIONS.teams.write,
             PERMISSIONS.roles.read,
             PERMISSIONS.roles.write,
+            PERMISSIONS.invite.read,
+            PERMISSIONS.invite.write,
           ],
         },
         {
@@ -347,14 +348,7 @@ class AuthService implements IAuthService {
     };
 
     try {
-      const {
-        orgId,
-        orgRole: orgRoleId,
-        teamId,
-        teamRole,
-        email,
-        expiry,
-      } = invite;
+      const { orgId, orgRoleId, teamId, teamRoleId, email, expiry } = invite;
 
       if (expiry < new Date()) {
         throw new ApiError("Invite token has expired", 400);
@@ -404,7 +398,7 @@ class AuthService implements IAuthService {
             orgId: orgId,
             userId: user._id,
             teamId,
-            roleId: teamRole,
+            roleId: teamRoleId,
           });
           created.teamMembership = newTeamMembership._id;
           teamMemberships.push(newTeamMembership);
@@ -434,7 +428,7 @@ class AuthService implements IAuthService {
           orgId: orgId,
           userId: user._id,
           teamId,
-          roleId: teamRole,
+          roleId: teamRoleId,
         });
         created.teamMembership = newTeamMembership._id;
         teamMemberships = [newTeamMembership];
@@ -481,6 +475,7 @@ class AuthService implements IAuthService {
         teams: returnableTeams,
       };
 
+      invalidateCachesForUser(user._id.toString());
       return {
         tokenizedUser,
         returnableUser,

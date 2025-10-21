@@ -3,9 +3,9 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 export interface IInvite extends Document {
   _id: Types.ObjectId;
   orgId: Types.ObjectId;
-  orgRole?: Types.ObjectId;
+  orgRoleId?: Types.ObjectId;
   teamId: Types.ObjectId;
-  teamRole: Types.ObjectId;
+  teamRoleId: Types.ObjectId;
   email: string;
   tokenHash: string;
   createdBy: Types.ObjectId;
@@ -18,9 +18,9 @@ export interface IInvite extends Document {
 const InviteSchema = new Schema<IInvite>(
   {
     orgId: { type: Schema.Types.ObjectId, ref: "Org", required: true },
-    orgRole: { type: Schema.Types.ObjectId, ref: "Role" },
     teamId: { type: Schema.Types.ObjectId, ref: "Team", required: true },
-    teamRole: { type: Schema.Types.ObjectId, ref: "Role", required: true },
+    orgRoleId: { type: Schema.Types.ObjectId, ref: "Role" },
+    teamRoleId: { type: Schema.Types.ObjectId, ref: "Role", required: true },
     email: {
       type: String,
       required: true,
