@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import ApiError from "@/utils/ApiError.js";
 import TeamService from "@/services/business/TeamService.js";
-import { encode } from "@/utils/JWTUtils.js";
 import { invalidateCachesForUser } from "@/middleware/AddUserContext.js";
 
 export interface ITeamController {
@@ -73,9 +72,10 @@ class TeamController implements ITeamController {
       let teams;
       if (editable) {
         teams = await this.teamService.getEditable(userId, orgId);
+      } else {
+        teams = await this.teamService.getAll(userId, orgId);
       }
 
-      teams = await this.teamService.getAll(userId, orgId);
       return res
         .status(200)
         .json({ message: "Teams retrieved successfully", data: teams });
@@ -138,19 +138,16 @@ class TeamController implements ITeamController {
         throw new ApiError("No team ID", 400);
       }
 
-      const tokenizedUser = req.user;
-      if (!tokenizedUser) {
+      const userContext = req.user;
+      if (!userContext) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const success = await this.teamService.delete(
-        tokenizedUser.orgId,
-        teamId
-      );
+      const success = await this.teamService.delete(userContext.orgId, teamId);
       if (!success) {
         throw new ApiError("Failed to delete team", 500);
       }
-      return res.status(204).json({
+      return res.status(200).json({
         message: "Team deleted successfully",
       });
     } catch (error) {
