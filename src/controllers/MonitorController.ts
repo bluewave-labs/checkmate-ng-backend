@@ -13,17 +13,22 @@ class MonitorController {
 
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokenizedUser = req.user;
-      if (!tokenizedUser) {
+      const userContext = req.user;
+      if (!userContext) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const teamId = tokenizedUser.currentTeamId;
-      if (!teamId) {
+      if (!userContext.currentTeamId) {
         throw new ApiError("No team ID", 400);
       }
 
-      const monitor = await this.monitorService.create(tokenizedUser, req.body);
+      const monitor = await this.monitorService.create(
+        userContext.orgId,
+        userContext.sub,
+        userContext.currentTeamId,
+        req.body
+      );
+
       res.status(201).json({
         message: "Monitor created successfully",
         data: monitor,
@@ -35,12 +40,12 @@ class MonitorController {
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokenizedUser = req.user;
-      if (!tokenizedUser) {
+      const userContext = req.user;
+      if (!userContext) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const teamId = tokenizedUser.currentTeamId;
+      const teamId = userContext.currentTeamId;
       if (!teamId) {
         throw new ApiError("No team ID", 400);
       }
@@ -72,19 +77,24 @@ class MonitorController {
 
   getChecks = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokenizedUser = req.user;
-      if (!tokenizedUser) {
+      const userContext = req.user;
+      if (!userContext) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const teamId = tokenizedUser.currentTeamId;
+      const teamId = userContext.currentTeamId;
       if (!teamId) {
         throw new ApiError("No team ID", 400);
       }
 
-      const id = req.params.id;
-      if (!id) {
+      const monitorId = req.params.id;
+      if (!monitorId) {
         throw new ApiError("Monitor ID is required", 400);
+      }
+
+      const monitor = await this.monitorService.get(teamId, monitorId);
+      if (!monitor) {
+        throw new ApiError("Monitor not found", 404);
       }
 
       const page = Number(req.query.page);
@@ -100,7 +110,7 @@ class MonitorController {
         throw new ApiError("rowsPerPage must be greater than 0", 400);
 
       const { count, checks } = await this.checkService.getChecks(
-        id,
+        monitorId,
         page,
         rowsPerPage
       );
@@ -115,25 +125,25 @@ class MonitorController {
 
   toggleActive = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokenizedUser = req.user;
-      if (!tokenizedUser) {
+      const userContext = req.user;
+      if (!userContext) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const teamId = tokenizedUser.currentTeamId;
+      const teamId = userContext.currentTeamId;
       if (!teamId) {
         throw new ApiError("No team ID", 400);
       }
 
-      const id = req.params.id;
-      if (!id) {
+      const monitorId = req.params.id;
+      if (!monitorId) {
         throw new ApiError("Monitor ID is required", 400);
       }
 
       const monitor = await this.monitorService.toggleActive(
+        userContext.sub,
         teamId,
-        id,
-        tokenizedUser
+        monitorId
       );
       res.status(200).json({
         message: "Monitor paused/unpaused successfully",
@@ -146,18 +156,18 @@ class MonitorController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokenizedUser = req.user;
-      if (!tokenizedUser) {
+      const userContext = req.user;
+      if (!userContext) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const teamId = tokenizedUser.currentTeamId;
+      const teamId = userContext.currentTeamId;
       if (!teamId) {
         throw new ApiError("No team ID", 400);
       }
 
-      const id = req.params.id;
-      if (!id) {
+      const monitorId = req.params.id;
+      if (!monitorId) {
         throw new ApiError("Monitor ID is required", 400);
       }
 
@@ -175,12 +185,12 @@ class MonitorController {
 
         monitor = await this.monitorService.getEmbedChecks(
           teamId,
-          id,
+          monitorId,
           range,
           status
         );
       } else {
-        monitor = await this.monitorService.get(teamId, id);
+        monitor = await this.monitorService.get(teamId, monitorId);
       }
 
       res.status(200).json({
@@ -194,25 +204,25 @@ class MonitorController {
 
   update = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokenizedUser = req.user;
-      if (!tokenizedUser) {
+      const userContext = req.user;
+      if (!userContext) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const teamId = tokenizedUser.currentTeamId;
+      const teamId = userContext.currentTeamId;
       if (!teamId) {
         throw new ApiError("No team ID", 400);
       }
 
-      const id = req.params.id;
-      if (!id) {
+      const monitorId = req.params.id;
+      if (!monitorId) {
         throw new ApiError("Monitor ID is required", 400);
       }
 
       const monitor = await this.monitorService.update(
+        userContext.sub,
         teamId,
-        tokenizedUser,
-        id,
+        monitorId,
         req.body
       );
       res.status(200).json({

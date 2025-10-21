@@ -16,7 +16,9 @@ const SERVICE_NAME = "MonitorServiceV2";
 
 export interface IMonitorService {
   create: (
-    tokenizedUser: ITokenizedUser,
+    orgId: string,
+    userId: string,
+    currentTeamId: string,
     monitorData: IMonitor
   ) => Promise<IMonitor>;
   getAll: (teamId: string) => Promise<IMonitor[]>;
@@ -34,13 +36,13 @@ export interface IMonitorService {
     status?: string
   ) => Promise<MonitorWithChecksResponse>;
   toggleActive: (
+    userId: string,
     teamId: string,
-    monitorId: string,
-    tokenizedUser: ITokenizedUser
+    monitorId: string
   ) => Promise<IMonitor>;
   update: (
+    userId: string,
     teamId: string,
-    tokenizedUser: ITokenizedUser,
     monitorId: string,
     updateData: Partial<IMonitor>
   ) => Promise<IMonitor>;
@@ -55,13 +57,18 @@ class MonitorService implements IMonitorService {
     this.jobQueue = jobQueue;
   }
 
-  create = async (tokenizedUser: ITokenizedUser, monitorData: IMonitor) => {
+  create = async (
+    orgId: string,
+    userId: string,
+    currentTeamId: string,
+    monitorData: IMonitor
+  ) => {
     const monitorLiteral: Partial<IMonitor> = {
       ...monitorData,
-      orgId: new mongoose.Types.ObjectId(tokenizedUser.orgId),
-      teamId: new mongoose.Types.ObjectId(tokenizedUser.currentTeamId),
-      createdBy: new mongoose.Types.ObjectId(tokenizedUser.sub),
-      updatedBy: new mongoose.Types.ObjectId(tokenizedUser.sub),
+      orgId: new mongoose.Types.ObjectId(orgId),
+      teamId: new mongoose.Types.ObjectId(currentTeamId),
+      createdBy: new mongoose.Types.ObjectId(userId),
+      updatedBy: new mongoose.Types.ObjectId(userId),
     };
 
     const monitor = await Monitor.create(monitorLiteral);
@@ -438,11 +445,7 @@ class MonitorService implements IMonitorService {
     };
   };
 
-  async toggleActive(
-    teamId: string,
-    id: string,
-    tokenizedUser: ITokenizedUser
-  ) {
+  async toggleActive(userId: string, teamId: string, id: string) {
     const pendingStatus: MonitorStatus = "initializing";
     const updatedMonitor = await Monitor.findOneAndUpdate(
       { _id: id, teamId },
@@ -451,7 +454,7 @@ class MonitorService implements IMonitorService {
           $set: {
             isActive: { $not: "$isActive" },
             status: pendingStatus,
-            updatedBy: tokenizedUser.sub,
+            updatedBy: userId,
             updatedAt: new Date(),
           },
         },
@@ -474,8 +477,8 @@ class MonitorService implements IMonitorService {
   }
 
   async update(
+    userId: string,
     teamId: string,
-    tokenizedUser: ITokenizedUser,
     monitorId: string,
     updateData: Partial<IMonitor>
   ) {
@@ -500,7 +503,7 @@ class MonitorService implements IMonitorService {
         $set: {
           ...safeUpdate,
           updatedAt: new Date(),
-          updatedBy: tokenizedUser.sub,
+          updatedBy: userId,
         },
       },
       { new: true, runValidators: true }

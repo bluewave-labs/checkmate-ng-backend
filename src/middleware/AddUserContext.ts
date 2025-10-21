@@ -131,6 +131,11 @@ export const addUserContext = async (
     // Get user team IDs
     const teamIds = await getTeamIds(sub);
 
+    // Short circuit if user doesn't belong to selected team
+    if (!teamIds.includes(currentTeamId)) {
+      throw new ApiError("User does not belong to the selected team", 403);
+    }
+
     // Get user roles to context
     const { orgRole, teamRole } = await getRoles(sub, orgId, currentTeamId);
 
