@@ -23,7 +23,6 @@ import ApiError from "@/utils/ApiError.js";
 import mongoose, { Types } from "mongoose";
 import { IJobQueue } from "../infrastructure/JobQueue.js";
 import { hashPassword } from "@/utils/JWTUtils.js";
-import { invalidateCachesForUser } from "@/middleware/AddUserContext.js";
 
 const SERVICE_NAME = "AuthServiceV2";
 
@@ -207,7 +206,8 @@ class AuthService implements IAuthService {
       org: null,
       roles: [],
       team: null,
-      memberships: [],
+      teamMembership: null,
+      orgMembership: null,
     };
 
     try {
@@ -281,7 +281,7 @@ class AuthService implements IAuthService {
         orgId: org._id,
         roleId: roles[0]?._id,
       });
-      created.memberships.push(membership._id);
+      created.orgMembership = membership._id;
 
       const team = await Team.create({
         name: "Default Team",
@@ -297,7 +297,7 @@ class AuthService implements IAuthService {
         teamId: team._id,
         roleId: roles[2]?._id,
       });
-      created.memberships.push(teamMembership._id);
+      created.teamMembership = teamMembership._id;
 
       const tokenizedUser: ITokenizedUser = {
         sub: user._id.toString(),
@@ -325,7 +325,8 @@ class AuthService implements IAuthService {
 
       return { tokenizedUser, returnableUser };
     } catch (error) {
-      await TeamMembership.deleteMany({ _id: { $in: created.memberships } });
+      await TeamMembership.deleteOne({ _id: created.teamMembership });
+      await OrgMembership.deleteOne({ _id: created.orgMembership });
       await Team.deleteOne({ _id: created.team });
       await Role.deleteMany({ _id: { $in: created.roles } });
       if (created.org) await Org.findByIdAndDelete(created.org);
@@ -457,7 +458,6 @@ class AuthService implements IAuthService {
         teams: returnableTeams,
       };
 
-      invalidateCachesForUser(user._id.toString());
       return {
         tokenizedUser,
         returnableUser,

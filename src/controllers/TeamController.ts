@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import ApiError from "@/utils/ApiError.js";
 import TeamService from "@/services/business/TeamService.js";
-import { invalidateCachesForUser } from "@/middleware/AddUserContext.js";
 
 export interface ITeamController {
   create: (req: Request, res: Response, next: NextFunction) => void;
@@ -39,8 +38,6 @@ class TeamController implements ITeamController {
       if (!roleId) {
         throw new ApiError("No role ID", 400);
       }
-
-      invalidateCachesForUser(userId);
 
       await this.teamService.create(orgId, userId, req.body, roleId);
 

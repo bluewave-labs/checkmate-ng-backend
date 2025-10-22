@@ -3,10 +3,10 @@ import {
   IInvite,
   Invite,
   User,
+  IUser,
   Role,
   Team,
   TeamMembership,
-  User,
 } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
 
@@ -21,7 +21,7 @@ export interface IInviteService {
     teamRoleId: string
   ) => Promise<string>;
   getAll: () => Promise<IInvite[]>;
-  get: (tokenHash: string) => Promise<IInvite>;
+  get: (tokenHash: string) => Promise<{ user: IUser | null; invite: IInvite }>;
   delete: (id: string) => Promise<boolean>;
 }
 
@@ -74,7 +74,7 @@ class InviteService implements IInviteService {
 
       const invite = await Invite.create({
         orgId,
-        orgRoleId,
+        ...(orgRoleId && { orgRoleId }),
         teamId,
         teamRoleId,
         email,
@@ -98,7 +98,8 @@ class InviteService implements IInviteService {
     if (!invite) {
       throw new ApiError("Invite not found", 404);
     }
-    return invite;
+    const user = await User.findOne({ email: invite.email });
+    return { user, invite };
   };
 
   getAll = async () => {

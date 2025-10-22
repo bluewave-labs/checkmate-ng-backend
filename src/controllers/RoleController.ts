@@ -27,9 +27,6 @@ class RoleController implements IRoleController {
       }
 
       const type = req.query.type;
-      if (!type) {
-        throw new ApiError("No type specified", 400);
-      }
 
       const roles = await this.roleService.getAll(
         tokenizedUser.orgId,

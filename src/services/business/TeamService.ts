@@ -144,7 +144,10 @@ class TeamService implements ITeamService {
       throw new ApiError("Cannot delete your default team");
     }
 
-    await TeamMembership.deleteMany({ teamId });
+    const memberships = await TeamMembership.find({ teamId });
+    for (const membership of memberships) {
+      await membership.deleteOne();
+    }
 
     const monitors = await Monitor.find({ teamId });
     await Promise.all(

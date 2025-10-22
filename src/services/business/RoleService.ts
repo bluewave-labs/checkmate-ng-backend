@@ -17,6 +17,9 @@ class RoleService implements IRoleService {
   }
 
   getAll = async (orgId: string, type: string) => {
+    if (!type) {
+      return await Role.find({ organizationId: orgId });
+    }
     const roles = await Role.find({ organizationId: orgId, scope: type });
     return roles;
   };

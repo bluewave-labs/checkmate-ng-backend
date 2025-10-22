@@ -56,12 +56,12 @@ class InviteController {
 
   get = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const token = req.params.token;
+      const token = req.params.id;
       if (!token) {
         return res.status(400).json({ message: "Token parameter is required" });
       }
-      const invite = await this.inviteService.get(token);
-      res.status(200).json({ message: "OK", data: invite });
+      const result = await this.inviteService.get(token);
+      res.status(200).json({ message: "OK", data: result });
     } catch (error) {
       next(error);
     }

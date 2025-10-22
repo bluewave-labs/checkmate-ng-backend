@@ -31,13 +31,7 @@ class InviteRoutes {
       this.controller.getAll
     );
 
-    this.router.get(
-      "/:token",
-      verifyToken,
-      addUserContext,
-      verifyOrgPermission([PERMISSIONS.invite.read]),
-      this.controller.get
-    );
+    this.router.get("/:id", verifyToken, this.controller.get);
 
     this.router.delete(
       "/:id",

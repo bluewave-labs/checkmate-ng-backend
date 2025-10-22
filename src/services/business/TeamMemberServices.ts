@@ -10,8 +10,6 @@ import {
   IOrgMembership,
 } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
-import { invalidateCachesForUser } from "@/middleware/AddUserContext.js";
-import { invalid } from "joi";
 
 const SERVICE_NAME = "TeamMemberService";
 export interface ITeamMemberService {
@@ -45,7 +43,6 @@ class TeamMemberService implements ITeamMemberService {
     if (!userId) {
       throw new ApiError("User ID is required", 400);
     }
-    invalidateCachesForUser(userId);
 
     const existing = await TeamMembership.findOne({
       teamId: data.teamId,
@@ -143,7 +140,6 @@ class TeamMemberService implements ITeamMemberService {
     if (!tm) {
       throw new ApiError("Team member not found", 404);
     }
-    invalidateCachesForUser(tm.userId.toString());
     await TeamMembership.findOneAndDelete({ _id: teamMemberId, orgId: orgId });
     return true;
   };
