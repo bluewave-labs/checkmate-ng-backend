@@ -334,13 +334,7 @@ class AuthService implements IAuthService {
     }
   }
 
-  async registerWithInvite(
-    invite: IInvite,
-    signupData: RegisterData
-  ): Promise<{
-    tokenizedUser: ITokenizedUser;
-    returnableUser: IUserReturnable;
-  }> {
+  registerWithInvite = async (invite: IInvite, signupData: RegisterData) => {
     const created: Record<string, any> = {
       user: null,
       orgMembership: null,
@@ -348,93 +342,77 @@ class AuthService implements IAuthService {
     };
 
     try {
+      if (!invite) {
+        throw new ApiError("No token found", 404);
+      }
+
       const { orgId, orgRoleId, teamId, teamRoleId, email, expiry } = invite;
 
       if (expiry < new Date()) {
         throw new ApiError("Invite token has expired", 400);
       }
-
-      let user = null;
-      let orgMembership = null;
-      let teamMemberships = null;
-      let orgPermissions: string[] = [];
-
+      if (!orgId) {
+        throw new ApiError("No organization ID", 400);
+      }
+      // Check for org
       const org = await Org.findById(orgId);
       if (!org) {
         throw new ApiError("Organization not found", 404);
       }
 
-      user = await User.findOne({ email });
-
-      if (user) {
-        orgMembership = await OrgMembership.findOne({
-          userId: user._id,
-          orgId,
-        });
-        if (!orgMembership) {
-          throw new ApiError(
-            "User already exists but does not belong to the organization they are being invited to",
-            400
-          );
-        }
-
-        if (orgRoleId) {
-          await OrgMembership.updateOne(
-            { _id: orgMembership._id },
-            { roleId: orgRoleId }
-          );
-          orgPermissions = await Role.findById(orgRoleId).then(
-            (r) => r?.permissions || []
-          );
-        }
-
-        teamMemberships = await TeamMembership.find({ userId: user._id });
-        if (
-          !teamMemberships.some(
-            (tm) => tm.teamId.toString() === teamId.toString()
-          )
-        ) {
-          const newTeamMembership = await TeamMembership.create({
-            orgId: orgId,
-            userId: user._id,
-            teamId,
-            roleId: teamRoleId,
-          });
-          created.teamMembership = newTeamMembership._id;
-          teamMemberships.push(newTeamMembership);
-        }
-      } else {
-        // Create a new user
+      // Get or Create user
+      let user = await User.findOne({ email });
+      if (!user) {
         const passwordHash = await hashPassword(signupData.password);
-        const newUserData: Partial<IUser> = {
+        user = await User.create({
+          email,
           firstName: signupData.firstName,
           lastName: signupData.lastName,
-          email,
           passwordHash,
-        };
-        user = await User.create(newUserData);
+        });
         created.user = user._id;
-
-        // Create orgMembership
-        const newOrgMembership = await OrgMembership.create({
-          userId: user._id,
-          orgId,
-          roleId: orgRoleId,
-        });
-        created.orgMembership = newOrgMembership._id;
-
-        // Create teamMembership
-        const newTeamMembership = await TeamMembership.create({
-          orgId: orgId,
-          userId: user._id,
-          teamId,
-          roleId: teamRoleId,
-        });
-        created.teamMembership = newTeamMembership._id;
-        teamMemberships = [newTeamMembership];
       }
 
-      // Get teams
+      const team = await Team.findById(teamId);
+      if (!team) {
+        throw new ApiError("Team not found", 404);
+      }
+
+      // Get or create orgMembership
+      let orgMembership = await OrgMembership.findOne({
+        userId: user._id,
+        orgId,
+      });
+      if (orgMembership && !orgMembership.roleId && orgRoleId) {
+        orgMembership.roleId = orgRoleId;
+        await orgMembership.save();
+      }
+      if (!orgMembership) {
+        orgMembership = await OrgMembership.create({
+          orgId,
+          userId: user._id,
+          ...(orgRoleId ? { roleId: orgRoleId } : {}),
+        });
+        created.orgMembership = orgMembership._id;
+      }
+
+      // Create TeamMembership
+      let teamMembership = await TeamMembership.findOne({
+        userId: user._id,
+        teamId,
+      });
+      if (teamMembership) {
+        throw new ApiError("User is already a member of the team", 400);
+      }
+      teamMembership = await TeamMembership.create({
+        orgId,
+        teamId,
+        userId: user._id,
+        roleId: teamRoleId,
+      });
+      created.teamMembership = teamMembership._id;
+
+      // Get data for return
       const teamMembershipWithRoles = await TeamMembership.find({
         userId: user._id,
       })
@@ -445,6 +423,13 @@ class AuthService implements IAuthService {
 
       const teams = await this.getTeams(teamIds);
       const teamMap = new Map(teams.map((t) => [t._id.toString(), t]));
+
+      const tokenizedUser: ITokenizedUser = {
+        sub: user._id.toString(),
+        email: user.email,
+        orgId: orgId.toString(),
+      };
+
       const returnableTeams = teamMembershipWithRoles.map((tm) => {
         const team = teamMap.get(tm.teamId.toString());
         if (!team) {
@@ -457,11 +442,8 @@ class AuthService implements IAuthService {
         };
       });
 
-      const tokenizedUser: ITokenizedUser = {
-        sub: user._id.toString(),
-        email: user.email,
-        orgId: orgId.toString(),
-      };
+      const orgRole = await Role.findById(orgMembership.roleId);
+      const orgPermissions = orgRole?.permissions || [];
 
       const returnableUser: IUserReturnable = {
         id: user._id.toString(),
@@ -492,7 +474,7 @@ class AuthService implements IAuthService {
       }
       throw error;
     }
-  }
+  };
 
   async login(loginData: LoginData): Promise<{
     tokenizedUser: ITokenizedUser;

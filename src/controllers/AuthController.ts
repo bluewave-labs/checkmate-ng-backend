@@ -64,6 +64,7 @@ class AuthController {
       }
 
       const invite = await this.inviteService.get(token);
+
       const { tokenizedUser, returnableUser } =
         await this.authService.registerWithInvite(invite, req.body);
 

@@ -16,9 +16,10 @@ export interface IInviteService {
     userId: string,
     email: string,
     orgId: string,
+    orgRoleId: string,
     teamId: string,
     teamRoleId: string
-  ) => Promise<{ token: string }>;
+  ) => Promise<string>;
   getAll: () => Promise<IInvite[]>;
   get: (tokenHash: string) => Promise<IInvite>;
   delete: (id: string) => Promise<boolean>;
@@ -34,6 +35,7 @@ class InviteService implements IInviteService {
     userId: string,
     email: string,
     orgId: string,
+    orgRoleId: string,
     teamId: string,
     teamRoleId: string
   ) => {
@@ -72,6 +74,7 @@ class InviteService implements IInviteService {
 
       const invite = await Invite.create({
         orgId,
+        orgRoleId,
         teamId,
         teamRoleId,
         email,
@@ -85,14 +88,6 @@ class InviteService implements IInviteService {
       }
       return token;
     } catch (error: any) {
-      if (error?.code === 11000) {
-        const dupError = new ApiError(
-          "Invite with this email already exists",
-          409
-        );
-        dupError.stack = error?.stack;
-        throw dupError;
-      }
       throw error;
     }
   };

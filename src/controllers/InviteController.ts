@@ -26,12 +26,13 @@ class InviteController {
         throw new ApiError("No organization ID", 400);
       }
 
-      const { email, teamId, teamRoleId } = req.body;
+      const { email, orgRoleId, teamId, teamRoleId } = req.body;
 
       const invite = await this.inviteService.create(
         userId,
         email,
         orgId,
+        orgRoleId,
         teamId,
         teamRoleId
       );
