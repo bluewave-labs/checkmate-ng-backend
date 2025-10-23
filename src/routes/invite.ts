@@ -4,7 +4,8 @@ import { verifyToken } from "@/middleware/VerifyToken.js";
 import { verifyOrgPermission } from "@/middleware/VerifyPermission.js";
 import { addUserContext } from "@/middleware/AddUserContext.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
-
+import { validateBody } from "@/middleware/validation.js";
+import { inviteSchema } from "@/validation/index.js";
 class InviteRoutes {
   private router;
   private controller;
@@ -19,6 +20,7 @@ class InviteRoutes {
       "/",
       verifyToken,
       addUserContext,
+      validateBody(inviteSchema),
       verifyOrgPermission([PERMISSIONS.invite.write]),
       this.controller.create
     );

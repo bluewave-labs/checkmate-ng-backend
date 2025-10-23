@@ -4,6 +4,12 @@ import { verifyToken } from "@/middleware/VerifyToken.js";
 import { verifyTeamPermission } from "@/middleware/VerifyPermission.js";
 import { addUserContext } from "@/middleware/AddUserContext.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
+import { validateBody, validateQuery } from "@/middleware/validation.js";
+import {
+  monitorSchema,
+  monitorIdChecksQuerySchema,
+  monitorPatchSchema,
+} from "@/validation/index.js";
 
 class MonitorRoutes {
   private router;
@@ -20,6 +26,7 @@ class MonitorRoutes {
       verifyToken,
       addUserContext,
       verifyTeamPermission([PERMISSIONS.monitors.write]),
+      validateBody(monitorSchema),
       this.controller.create
     );
 
@@ -36,6 +43,7 @@ class MonitorRoutes {
       verifyToken,
       addUserContext,
       verifyTeamPermission([PERMISSIONS.monitors.read]),
+      validateQuery(monitorIdChecksQuerySchema),
       this.controller.getChecks
     );
 
@@ -60,6 +68,7 @@ class MonitorRoutes {
       verifyToken,
       addUserContext,
       verifyTeamPermission([PERMISSIONS.monitors.write]),
+      validateBody(monitorPatchSchema),
       this.controller.update
     );
 

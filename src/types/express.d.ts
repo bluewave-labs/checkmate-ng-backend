@@ -5,6 +5,7 @@ declare global {
     interface Request {
       user?: IUserContext;
       resource?: any;
+      validatedQuery: Record<string, any>;
     }
   }
 }

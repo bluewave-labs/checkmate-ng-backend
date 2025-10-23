@@ -97,17 +97,8 @@ class MonitorController {
         throw new ApiError("Monitor not found", 404);
       }
 
-      const page = Number(req.query.page);
-      const rowsPerPage = Number(req.query.rowsPerPage);
-
-      if (isNaN(page))
-        throw new ApiError("Page query parameter must be a number", 400);
-      if (isNaN(rowsPerPage))
-        throw new ApiError("rowsPerPage query parameter must be a number", 400);
-
-      if (page < 0) throw new ApiError("Page must be greater than 0", 400);
-      if (rowsPerPage < 0)
-        throw new ApiError("rowsPerPage must be greater than 0", 400);
+      const page = Number(req.validatedQuery.page);
+      const rowsPerPage = Number(req.validatedQuery.rowsPerPage);
 
       const { count, checks } = await this.checkService.getChecks(
         monitorId,
@@ -129,7 +120,6 @@ class MonitorController {
       if (!userContext) {
         return res.status(401).json({ message: "Unauthorized" });
       }
-
       const teamId = userContext.currentTeamId;
       if (!teamId) {
         throw new ApiError("No team ID", 400);
