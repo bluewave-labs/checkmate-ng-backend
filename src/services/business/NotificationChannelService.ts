@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 import {
-  ITokenizedUser,
+  IUserContext,
   INotificationChannel,
   NotificationChannel,
   Monitor,
@@ -12,19 +12,19 @@ const SERVICE_NAME = "NotificationChannelServiceV2";
 
 export interface INotificationChannelService {
   create: (
-    tokenizedUser: ITokenizedUser,
+    tokenizedUser: IUserContext,
     notificationChannel: INotificationChannel
   ) => Promise<INotificationChannel>;
   getAll: (teamId: string) => Promise<INotificationChannel[]>;
   get: (teamId: string, id: string) => Promise<INotificationChannel>;
   toggleActive: (
     teamId: string,
-    tokenizedUser: ITokenizedUser,
+    tokenizedUser: IUserContext,
     id: string
   ) => Promise<INotificationChannel>;
   update: (
     teamId: string,
-    tokenizedUser: ITokenizedUser,
+    tokenizedUser: IUserContext,
     id: string,
     updateData: Partial<INotificationChannel>
   ) => Promise<INotificationChannel>;
@@ -39,15 +39,15 @@ class NotificationChannelService implements INotificationChannelService {
   }
 
   create = async (
-    tokenizedUser: ITokenizedUser,
+    userContext: IUserContext,
     notificationChannelData: INotificationChannel
   ) => {
     const data: INotificationChannel = {
       ...notificationChannelData,
-      orgId: new mongoose.Types.ObjectId(tokenizedUser.orgId),
-      teamId: new mongoose.Types.ObjectId(tokenizedUser.currentTeamId),
-      createdBy: new mongoose.Types.ObjectId(tokenizedUser.sub),
-      updatedBy: new mongoose.Types.ObjectId(tokenizedUser.sub),
+      orgId: new mongoose.Types.ObjectId(userContext.orgId),
+      teamId: new mongoose.Types.ObjectId(userContext.currentTeamId),
+      createdBy: new mongoose.Types.ObjectId(userContext.sub),
+      updatedBy: new mongoose.Types.ObjectId(userContext.sub),
     };
 
     const notificationChannel = await NotificationChannel.create(data);
@@ -68,7 +68,7 @@ class NotificationChannelService implements INotificationChannelService {
 
   toggleActive = async (
     teamId: string,
-    tokenizedUser: ITokenizedUser,
+    userContext: IUserContext,
     id: string
   ) => {
     const updatedChannel = await NotificationChannel.findOneAndUpdate(
@@ -77,7 +77,7 @@ class NotificationChannelService implements INotificationChannelService {
         {
           $set: {
             isActive: { $not: "$isActive" },
-            updatedBy: tokenizedUser.sub,
+            updatedBy: userContext.sub,
             updatedAt: new Date(),
           },
         },
@@ -92,7 +92,7 @@ class NotificationChannelService implements INotificationChannelService {
 
   update = async (
     teamId: string,
-    tokenizedUser: ITokenizedUser,
+    userContext: IUserContext,
     id: string,
     updateData: Partial<INotificationChannel>
   ) => {
@@ -114,7 +114,7 @@ class NotificationChannelService implements INotificationChannelService {
         $set: {
           ...safeUpdate,
           updatedAt: new Date(),
-          updatedBy: tokenizedUser.sub,
+          updatedBy: userContext.sub,
         },
       },
       { new: true, runValidators: true }

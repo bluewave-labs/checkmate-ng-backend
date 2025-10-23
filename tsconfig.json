@@ -4,7 +4,7 @@
     "paths": {
       "@/*": ["./src/*"] // allows "@/db" -> "./src/db"
     },
-    "outDir": "./build",
+    "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "module": "nodenext",

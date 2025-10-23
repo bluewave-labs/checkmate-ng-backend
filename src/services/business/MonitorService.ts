@@ -1,12 +1,6 @@
 import mongoose from "mongoose";
 
-import {
-  IMonitor,
-  Monitor,
-  ITokenizedUser,
-  MonitorStats,
-  Check,
-} from "@/db/models/index.js";
+import { IMonitor, Monitor, MonitorStats, Check } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
 import { IJobQueue } from "@/services/infrastructure/JobQueue.js";
 import { MonitorWithChecksResponse } from "@/types/index.js";
@@ -432,7 +426,7 @@ class MonitorService implements IMonitorService {
     // Get monitor stats
     const monitorStats = await MonitorStats.findOne({
       monitorId: monitor._id,
-    }).lean();
+    });
 
     if (!monitorStats) {
       throw new ApiError("Monitor stats not found", 404);

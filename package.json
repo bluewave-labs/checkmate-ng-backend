@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon --exec tsx src/index.js",
+    "build": "tsc && tsc-alias",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -13,9 +14,12 @@
   "description": "",
   "devDependencies": {
     "@types/cookie-parser": "1.4.9",
+    "@types/cors": "2.8.19",
+    "@types/jsonwebtoken": "9.0.10",
     "@types/node": "24.7.1",
     "@types/nodemailer": "7.0.2",
     "nodemon": "3.1.10",
+    "tsc-alias": "1.8.16",
     "tsx": "4.20.6",
     "typescript": "5.9.3"
   },

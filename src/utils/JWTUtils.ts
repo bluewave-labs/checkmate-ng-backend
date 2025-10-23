@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { AuthResult } from "@/services/business/AuthService.js";
+import { IUserContext } from "@/db/models/index.js";
 import bcrypt from "bcryptjs";
 
 export const encode = (data: AuthResult): string => {
@@ -11,12 +12,12 @@ export const encode = (data: AuthResult): string => {
   return token;
 };
 
-export const decode = (token: string): AuthResult => {
+export const decode = (token: string): IUserContext => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     throw new Error("JWT_SECRET is not defined");
   }
-  const decoded = jwt.verify(token, secret) as AuthResult;
+  const decoded = jwt.verify(token, secret) as IUserContext;
   return decoded;
 };
 

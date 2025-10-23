@@ -1,27 +1,23 @@
-import {
-  ITokenizedUser,
-  IMaintenance,
-  Maintenance,
-} from "@/db/models/index.js";
+import { IUserContext, IMaintenance, Maintenance } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
 
 const SERVICE_NAME = "MaintenanceServiceV2";
 
 export interface IMaintenanceService {
   create: (
-    tokenizedUser: ITokenizedUser,
+    userContext: IUserContext,
     maintenance: IMaintenance
   ) => Promise<IMaintenance>;
   getAll: (teamId: string) => Promise<IMaintenance[]>;
   get: (teamId: string, id: string) => Promise<IMaintenance>;
   toggleActive: (
     teamId: string,
-    tokenizedUser: ITokenizedUser,
+    userContext: IUserContext,
     id: string
   ) => Promise<IMaintenance>;
   update: (
     teamId: string,
-    tokenizedUser: ITokenizedUser,
+    userContext: IUserContext,
     id: string,
     updateData: Partial<IMaintenance>
   ) => Promise<IMaintenance>;
@@ -43,16 +39,13 @@ class MaintenanceService implements IMaintenanceService {
     this.lastRefresh = 0;
   }
 
-  create = async (
-    tokenizedUser: ITokenizedUser,
-    maintenanceData: IMaintenance
-  ) => {
+  create = async (userContext: IUserContext, maintenanceData: IMaintenance) => {
     const maintenance = await Maintenance.create({
       ...maintenanceData,
-      orgId: tokenizedUser.orgId,
-      teamId: tokenizedUser.currentTeamId,
-      createdBy: tokenizedUser.sub,
-      updatedBy: tokenizedUser.sub,
+      orgId: userContext.orgId,
+      teamId: userContext.currentTeamId,
+      createdBy: userContext.sub,
+      updatedBy: userContext.sub,
     });
     return maintenance;
   };
@@ -71,7 +64,7 @@ class MaintenanceService implements IMaintenanceService {
 
   toggleActive = async (
     teamId: string,
-    tokenizedUser: ITokenizedUser,
+    userContext: IUserContext,
     id: string
   ) => {
     const updatedMaintenance = await Maintenance.findOneAndUpdate(
@@ -80,7 +73,7 @@ class MaintenanceService implements IMaintenanceService {
         {
           $set: {
             isActive: { $not: "$isActive" },
-            updatedBy: tokenizedUser.sub,
+            updatedBy: userContext.sub,
             updatedAt: new Date(),
           },
         },
@@ -95,7 +88,7 @@ class MaintenanceService implements IMaintenanceService {
 
   update = async (
     teamId: string,
-    tokenizedUser: ITokenizedUser,
+    userContext: IUserContext,
     id: string,
     updateData: Partial<IMaintenance>
   ) => {
@@ -119,7 +112,7 @@ class MaintenanceService implements IMaintenanceService {
         $set: {
           ...safeUpdate,
           updatedAt: new Date(),
-          updatedBy: tokenizedUser.sub,
+          updatedBy: userContext.sub,
         },
       },
       { new: true, runValidators: true }
