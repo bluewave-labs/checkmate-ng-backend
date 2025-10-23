@@ -34,7 +34,7 @@ export const inviteSchema = z.object({
 });
 
 const urlRegex =
-  /^(?:https?:\/\/)?([a-zA-Z0-9.-]+|\d{1,3}(\.\d{1,3}){3}|\[[0-9a-fA-F:]+\])(:\d{1,5})?$/;
+  /^(https?:\/\/)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(\d{1,3}\.){3}\d{1,3})(:\d{1,5})?(\/.*)?$/;
 
 export const monitorSchema = z.object({
   type: z.string().min(1, "You must select an option"),
