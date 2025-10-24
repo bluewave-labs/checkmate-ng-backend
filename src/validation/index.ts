@@ -8,6 +8,9 @@ export const registerSchema = z.object({
   password: z
     .string()
     .min(6, { message: "Password must be at least 6 characters" }),
+  confirmPassword: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters" }),
 });
 
 export const registerWithInviteSchema = z.object({
