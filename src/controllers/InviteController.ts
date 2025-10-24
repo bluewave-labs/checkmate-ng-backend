@@ -74,7 +74,7 @@ class InviteController {
         return res.status(400).json({ message: "ID parameter is required" });
       }
       await this.inviteService.delete(id);
-      res.status(204).json({ message: "OK" });
+      res.status(200).json({ message: "OK" });
     } catch (error: any) {
       next(error);
     }

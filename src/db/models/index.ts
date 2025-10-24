@@ -20,7 +20,10 @@ export type {
   IUserContext,
 } from "./auth/User.js";
 
-export { NotificationChannel } from "./notification-channel/NotificationChannel.js";
+export {
+  NotificationChannel,
+  ChannelTypes,
+} from "./notification-channel/NotificationChannel.js";
 export type { INotificationChannel } from "./notification-channel/NotificationChannel.js";
 
 export { Invite } from "./auth/Invite.js";

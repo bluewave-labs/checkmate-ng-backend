@@ -145,7 +145,7 @@ class NotificationChannelController {
         return res.status(400).json({ message: "ID parameter is required" });
       }
       await this.notificationService.delete(teamId, id);
-      res.status(204).json({ message: "OK" });
+      res.status(200).json({ message: "OK" });
     } catch (error) {
       next(error);
     }

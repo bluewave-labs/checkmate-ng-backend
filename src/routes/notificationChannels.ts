@@ -4,6 +4,12 @@ import { verifyToken } from "@/middleware/VerifyToken.js";
 import { verifyTeamPermission } from "@/middleware/VerifyPermission.js";
 import { addUserContext } from "@/middleware/AddUserContext.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
+import { validateBody, validateQuery } from "@/middleware/validation.js";
+import {
+  notificationChannelSchema,
+  notificationPatchSchema,
+} from "@/validation/index.js";
+
 class NotificationChannelRoutes {
   private router;
   private controller;
@@ -19,6 +25,7 @@ class NotificationChannelRoutes {
       verifyToken,
       addUserContext,
       verifyTeamPermission([PERMISSIONS.notifications.write]),
+      validateBody(notificationChannelSchema),
       this.controller.create
     );
 
@@ -43,6 +50,7 @@ class NotificationChannelRoutes {
       verifyToken,
       addUserContext,
       verifyTeamPermission([PERMISSIONS.notifications.update]),
+      validateBody(notificationPatchSchema),
       this.controller.update
     );
 

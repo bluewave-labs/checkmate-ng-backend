@@ -96,23 +96,11 @@ class NotificationChannelService implements INotificationChannelService {
     id: string,
     updateData: Partial<INotificationChannel>
   ) => {
-    const allowedFields: (keyof INotificationChannel)[] = [
-      "name",
-      "config",
-      "isActive",
-    ];
-    const safeUpdate: Partial<INotificationChannel> = {};
-    for (const field of allowedFields) {
-      if (updateData[field] !== undefined) {
-        (safeUpdate as any)[field] = updateData[field];
-      }
-    }
-
     const updatedChannel = await NotificationChannel.findOneAndUpdate(
       { _id: id, teamId },
       {
         $set: {
-          ...safeUpdate,
+          ...updateData,
           updatedAt: new Date(),
           updatedBy: userContext.sub,
         },
