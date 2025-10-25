@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-
 import { OrgMembership, TeamMembership, IRole } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
 
