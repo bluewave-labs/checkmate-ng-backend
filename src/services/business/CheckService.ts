@@ -1,4 +1,5 @@
 import { ICheck, Check, Monitor, ISystemInfo } from "@/db/models/index.js";
+import { MonitorStatus } from "@/db/models/monitors/Monitor.js";
 import { MonitorType } from "@/db/models/monitors/Monitor.js";
 import { StatusResponse } from "../infrastructure/NetworkService.js";
 import type {
@@ -6,7 +7,7 @@ import type {
   ILighthousePayload,
 } from "../infrastructure/NetworkService.js";
 import mongoose from "mongoose";
-import { stat } from "fs";
+import ApiError from "@/utils/ApiError.js";
 
 const SERVICE_NAME = "CheckServiceV2";
 export interface ICheckService {
@@ -14,6 +15,19 @@ export interface ICheckService {
     statusResponse: StatusResponse,
     type: MonitorType
   ) => Promise<ICheck>;
+  getMonitorChecks: (
+    monitorId: string,
+    page: number,
+    rowsPerPage: number
+  ) => Promise<{ checks: ICheck[]; count: number }>;
+  getChecksByStatus: (
+    status: MonitorStatus,
+    teamId: string,
+    monitorId: string,
+    page: number,
+    rowsPerPage: number
+  ) => Promise<{ checks: ICheck[]; count: number }>;
+
   cleanupOrphanedChecks: () => Promise<boolean>;
 }
 
@@ -78,9 +92,11 @@ class CheckService implements ICheckService {
 
   private buildBaseCheck = (statusResponse: StatusResponse) => {
     const monitorId = new mongoose.Types.ObjectId(statusResponse.monitorId);
+    const teamId = new mongoose.Types.ObjectId(statusResponse.teamId);
     const checkData: Partial<ICheck> = {
       metadata: {
         monitorId: monitorId,
+        teamId: teamId,
         type: statusResponse?.type,
       },
       status: statusResponse?.status,
@@ -171,7 +187,11 @@ class CheckService implements ICheckService {
     }
   };
 
-  getChecks = async (monitorId: string, page: number, rowsPerPage: number) => {
+  getMonitorChecks = async (
+    monitorId: string,
+    page: number,
+    rowsPerPage: number
+  ) => {
     const count = await Check.countDocuments({
       "metadata.monitorId": new mongoose.Types.ObjectId(monitorId),
     });
@@ -181,8 +201,46 @@ class CheckService implements ICheckService {
     })
       .sort({ createdAt: -1 })
       .skip(page * rowsPerPage)
-      .limit(rowsPerPage)
-      .exec();
+      .limit(rowsPerPage);
+    return { checks, count };
+  };
+
+  getChecksByStatus = async (
+    status: MonitorStatus,
+    teamId: string,
+    monitorId: string,
+    page: number,
+    rowsPerPage: number
+  ) => {
+    let match;
+    if (monitorId) {
+      const authorized = await Monitor.exists({
+        _id: monitorId,
+        "metadata.teamId": teamId,
+      });
+      if (!authorized) {
+        throw new ApiError("Not authorized", 403);
+      }
+
+      match = {
+        status,
+        "metadata.teamId": new mongoose.Types.ObjectId(teamId),
+        "metadata.monitorId": new mongoose.Types.ObjectId(monitorId),
+      };
+    } else {
+      match = {
+        status,
+        "metadata.teamId": new mongoose.Types.ObjectId(teamId),
+      };
+    }
+    const [count, checks] = await Promise.all([
+      Check.countDocuments(match),
+      Check.find(match)
+        .populate({ path: "metadata.monitorId", select: "name" })
+        .sort({ createdAt: -1 })
+        .skip(page * rowsPerPage)
+        .limit(rowsPerPage),
+    ]);
     return { checks, count };
   };
 }

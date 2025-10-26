@@ -8,8 +8,8 @@ import {
   TeamController,
   RoleController,
   TeamMemberController,
+  ChecksController,
 } from "@/controllers/index.js";
-import { Team } from "@/db/models/index.js";
 
 export const initControllers = (services: any) => {
   const controllers: Record<string, any> = {};
@@ -38,5 +38,7 @@ export const initControllers = (services: any) => {
   controllers.teamMemberController = new TeamMemberController(
     services.teamMemberService
   );
+
+  controllers.checksController = new ChecksController(services.checkService);
   return controllers;
 };

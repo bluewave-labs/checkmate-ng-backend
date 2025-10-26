@@ -123,6 +123,7 @@ export interface ICheck extends Document {
   _id: Types.ObjectId;
   metadata: {
     monitorId: Types.ObjectId;
+    teamId: Types.ObjectId;
     type: MonitorType;
   };
   ack: boolean;
@@ -148,6 +149,11 @@ const CheckSchema = new Schema<ICheck>(
       monitorId: {
         type: Schema.Types.ObjectId,
         ref: "Monitor",
+        required: true,
+      },
+      teamId: {
+        type: Schema.Types.ObjectId,
+        ref: "Team",
         required: true,
       },
       type: {

@@ -9,3 +9,4 @@ export { default as QueueRoutes } from "./queue.js";
 export { default as TeamRoutes } from "./team.js";
 export { default as RoleRoutes } from "./roles.js";
 export { default as TeamMemberRoutes } from "./teamMembers.js";
+export { default as ChecksRoutes } from "./checks.js";

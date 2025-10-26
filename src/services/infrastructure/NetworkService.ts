@@ -32,6 +32,7 @@ export interface ILighthousePayload {
 
 export interface StatusResponse<TPayload = unknown> {
   monitorId: string;
+  teamId: string;
   type: MonitorType;
   code?: number;
   status: MonitorStatus;
@@ -59,6 +60,7 @@ class NetworkService implements INetworkService {
     if (error) {
       const statusResponse: StatusResponse<T> = {
         monitorId: monitor._id.toString(),
+        teamId: monitor.teamId.toString(),
         type: monitor.type,
         status: "down" as MonitorStatus,
         code: this.NETWORK_ERROR,
@@ -77,6 +79,7 @@ class NetworkService implements INetworkService {
 
     const statusResponse: StatusResponse<T> = {
       monitorId: monitor._id.toString(),
+      teamId: monitor.teamId.toString(),
       type: monitor.type,
       code: response?.statusCode || this.NETWORK_ERROR,
       status: response?.ok === true ? "up" : "down",
@@ -186,6 +189,7 @@ class NetworkService implements INetworkService {
 
     return {
       monitorId: monitor._id.toString(),
+      teamId: monitor.teamId.toString(),
       type: monitor.type,
       status: status as MonitorStatus,
       message: "Ping successful",

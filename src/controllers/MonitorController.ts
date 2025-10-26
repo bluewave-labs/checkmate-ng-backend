@@ -100,7 +100,7 @@ class MonitorController {
       const page = Number(req.validatedQuery.page);
       const rowsPerPage = Number(req.validatedQuery.rowsPerPage);
 
-      const { count, checks } = await this.checkService.getChecks(
+      const { count, checks } = await this.checkService.getMonitorChecks(
         monitorId,
         page,
         rowsPerPage
