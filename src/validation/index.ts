@@ -267,4 +267,5 @@ export const checksStatusIdQuerySchema = z.object({
     }
     return num;
   }),
+  range: z.string().min(1),
 });

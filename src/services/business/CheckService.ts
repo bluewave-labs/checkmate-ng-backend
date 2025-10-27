@@ -36,6 +36,23 @@ class CheckService implements ICheckService {
   constructor() {
     this.SERVICE_NAME = SERVICE_NAME;
   }
+
+  private getStartDate(range: string): Date {
+    const now = new Date();
+    switch (range) {
+      case "2h":
+        return new Date(now.getTime() - 2 * 60 * 60 * 1000);
+      case "24h":
+        return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      case "7d":
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case "30d":
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      default:
+        throw new ApiError("Invalid range parameter", 400);
+    }
+  }
+
   private isCapturePayload = (payload: any): payload is ICapturePayload => {
     if (!payload || typeof payload !== "object") return false;
 
@@ -210,13 +227,16 @@ class CheckService implements ICheckService {
     teamId: string,
     monitorId: string,
     page: number,
-    rowsPerPage: number
+    rowsPerPage: number,
+    range: string
   ) => {
     let match;
+    const startDate = this.getStartDate(range);
+
     if (monitorId) {
       const authorized = await Monitor.exists({
         _id: monitorId,
-        "metadata.teamId": teamId,
+        teamId,
       });
       if (!authorized) {
         throw new ApiError("Not authorized", 403);
@@ -226,11 +246,13 @@ class CheckService implements ICheckService {
         status,
         "metadata.teamId": new mongoose.Types.ObjectId(teamId),
         "metadata.monitorId": new mongoose.Types.ObjectId(monitorId),
+        createdAt: { $gte: startDate },
       };
     } else {
       match = {
         status,
         "metadata.teamId": new mongoose.Types.ObjectId(teamId),
+        createdAt: { $gte: startDate },
       };
     }
     const [count, checks] = await Promise.all([

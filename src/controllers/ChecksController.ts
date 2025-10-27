@@ -23,6 +23,7 @@ class ChecksController implements IChecksController {
         monitorId,
         page = 0,
         rowsPerPage = 10,
+        range,
       } = req.validatedQuery;
 
       const userContext = req.user;
@@ -40,7 +41,8 @@ class ChecksController implements IChecksController {
         teamId,
         monitorId,
         page,
-        rowsPerPage
+        rowsPerPage,
+        range
       );
 
       return res.status(200).json({
