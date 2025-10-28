@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/multi-tenant";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/saas";
 
 const RETRY_INTERVAL_MS = 2000; // wait 2 seconds between retries
 const MAX_RETRIES = 10; // number of retries before giving up

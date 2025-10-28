@@ -88,7 +88,31 @@ class MonitorService implements IMonitorService {
     let find = {};
     if (type.length > 0) find = { type: { $in: type } };
     find = { ...find, teamId };
-    const monitors = await Monitor.find(find).skip(skip).limit(limit);
+    const monitors = await Monitor.find(find).lean().skip(skip).limit(limit);
+
+    if (type.length === 1 && type[0] === "pagespeed") {
+      const monitorIds = monitors.map((m) => m._id);
+
+      const checks = await Check.aggregate([
+        { $match: { "metadata.monitorId": { $in: monitorIds } } },
+        { $sort: { createdAt: -1 } },
+        {
+          $group: {
+            _id: "$metadata.monitorId",
+            latestChecks: { $push: "$$ROOT" },
+          },
+        },
+        { $project: { latestChecks: { $slice: ["$latestChecks", 25] } } },
+      ]);
+
+      const checksMap = new Map(
+        checks.map((c: any) => [c._id.toString(), c.latestChecks])
+      );
+
+      monitors.forEach((monitor) => {
+        monitor.latestChecks = checksMap.get(monitor._id.toString()) || [];
+      });
+    }
     return monitors;
   };
 
@@ -367,6 +391,7 @@ class MonitorService implements IMonitorService {
     if (!monitor) {
       throw new ApiError("Monitor not found", 404);
     }
+
     const startDate = this.getStartDate(range);
     const dateFormat = this.getDateFormat(range);
 

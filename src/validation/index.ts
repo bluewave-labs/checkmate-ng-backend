@@ -42,25 +42,58 @@ export const inviteSchema = z.object({
 const urlRegex =
   /^(https?:\/\/)?(localhost|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(\d{1,3}\.){3}\d{1,3})(:\d{1,5})?(\/.*)?$/;
 
-export const monitorSchema = z.object({
-  type: z.string().min(1, "You must select an option"),
-  url: z.string().min(1, "URL is required").regex(urlRegex, "Invalid URL"),
-  name: z.string().min(1, "Display name is required"),
-  n: z
-    .number({ message: "Number required" })
-    .min(1, "Minimum value is 1")
-    .max(25, "Maximum value is 25"),
-  notificationChannels: z.array(z.string()).optional().default([]),
-  secret: z.string().optional(),
-  interval: z.number().min(5000, "Interval must be at least 5000 milliseconds"),
-});
+export const monitorSchema = z
+  .object({
+    type: z.string().min(1, "You must select an option"),
+    url: z.string().min(1, "URL is required").regex(urlRegex, "Invalid URL"),
+    name: z.string().min(1, "Display name is required"),
+    n: z
+      .number({ message: "Number required" })
+      .min(1, "Minimum value is 1")
+      .max(25, "Maximum value is 25"),
+    notificationChannels: z.array(z.string()).optional().default([]),
+    secret: z.string().optional(),
+    interval: z.number({ message: "Interval required" }),
+  })
+  .superRefine((data, ctx) => {
+    const minIntervals: Record<string, number> = {
+      http: 10000,
+      ping: 10000,
+      pagespeed: 100000,
+    };
+
+    const minInterval = minIntervals[data.type];
+    if (minInterval && data.interval < minInterval) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Minimum interval for ${data.type} monitors is ${minInterval} ms`,
+      });
+    }
+  });
 
 export const monitorPatchSchema = monitorSchema
   .omit({
-    type: true,
     url: true,
   })
-  .partial();
+  .partial()
+  .superRefine((data, ctx) => {
+    const minIntervals: Record<string, number> = {
+      http: 10000,
+      https: 10000,
+      ping: 10000,
+      pagespeed: 180000,
+    };
+
+    if (!data.type || !data.interval) return;
+
+    const minInterval = minIntervals[data.type];
+    if (minInterval && data.interval < minInterval) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Minimum interval for ${data.type} monitors is ${minInterval} ms`,
+      });
+    }
+  });
 
 export const monitorIdChecksQuerySchema = z.object({
   page: z.string().transform((val, ctx) => {

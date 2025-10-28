@@ -11,6 +11,7 @@ import type {
 } from "@/db/models/index.js";
 import { MonitorType, MonitorStatus } from "@/db/models/monitors/Monitor.js";
 import ApiError from "@/utils/ApiError.js";
+import { config } from "@/config/index.js";
 
 const SERVICE_NAME = "NetworkServiceV2";
 export interface INetworkService {
@@ -142,7 +143,7 @@ class NetworkService implements INetworkService {
   };
 
   requestPagespeed = async (monitor: IMonitor) => {
-    const apiKey = "REPLACE ME";
+    const apiKey = config.PAGESPEED_API_KEY;
     if (!apiKey) {
       throw new Error("No API key provided for pagespeed monitor");
     }
