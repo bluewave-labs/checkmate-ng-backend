@@ -9,6 +9,7 @@ import {
   monitorSchema,
   monitorIdChecksQuerySchema,
   monitorPatchSchema,
+  monitorAllEmbedChecksQuerySchema,
 } from "@/validation/index.js";
 import { verify } from "node:crypto";
 
@@ -36,6 +37,7 @@ class MonitorRoutes {
       verifyToken,
       addUserContext,
       verifyTeamPermission([PERMISSIONS.monitors.read]),
+      validateQuery(monitorAllEmbedChecksQuerySchema),
       this.controller.getAll
     );
 

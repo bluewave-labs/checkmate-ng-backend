@@ -74,28 +74,25 @@ class MonitorController {
         throw new ApiError("No team ID", 400);
       }
 
-      let monitors;
-      if (req.query.embedChecks === "true") {
-        const page = Math.max(1, Number(req.query.page) || 1);
-        const limit = Math.max(1, Number(req.query.limit) || 10);
-        let type: MonitorType[] = req.query.type as MonitorType[];
-        if (!Array.isArray(type)) {
-          type = [type];
-        }
+      let result;
+      if (req.validatedQuery.embedChecks === true) {
+        const page = req.validatedQuery.page || 0;
+        const rowsPerPage = req.validatedQuery.rowsPerPage || 10;
+        const type = req.validatedQuery.type;
 
-        monitors = await this.monitorService.getAllEmbedChecks(
+        result = await this.monitorService.getAllEmbedChecks(
           teamId,
           page,
-          limit,
+          rowsPerPage,
           type
         );
       } else {
-        monitors = await this.monitorService.getAll(teamId);
+        result = await this.monitorService.getAll(teamId);
       }
 
       res.status(200).json({
         message: "Monitors retrieved successfully",
-        data: monitors,
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -302,12 +299,10 @@ class MonitorController {
         monitorId,
         teamId
       );
-      return res
-        .status(200)
-        .json({
-          message: "Notification test sent successfully",
-          data: results,
-        });
+      return res.status(200).json({
+        message: "Notification test sent successfully",
+        data: results,
+      });
     } catch (error) {
       next(error);
     }

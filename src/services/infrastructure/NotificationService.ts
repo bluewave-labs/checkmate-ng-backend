@@ -109,10 +109,7 @@ class NotificationService implements INotificationService {
       let service;
       switch (channel.type) {
         case "email":
-          const sentEmail = await this.emailService.sendMessage(
-            this.emailService.buildAlert(monitor),
-            channel
-          );
+          const sentEmail = await this.emailService.testMessage(channel);
           results.push({
             channelName: channel.name,
             channelType: channel.type,
@@ -121,10 +118,7 @@ class NotificationService implements INotificationService {
           });
           break;
         case "slack":
-          const sentSlack = await this.slackService.sendMessage(
-            this.slackService.buildAlert(monitor),
-            channel
-          );
+          const sentSlack = await this.slackService.testMessage(channel);
           results.push({
             channelName: channel.name,
             channelType: channel.type,
@@ -133,10 +127,7 @@ class NotificationService implements INotificationService {
           });
           break;
         case "discord":
-          const sentDiscord = await this.discordService.sendMessage(
-            this.discordService.buildAlert(monitor),
-            channel
-          );
+          const sentDiscord = await this.discordService.testMessage(channel);
           results.push({
             channelName: channel.name,
             channelType: channel.type,
@@ -145,10 +136,7 @@ class NotificationService implements INotificationService {
           });
           break;
         case "webhook":
-          const sentWebhook = await this.webhookService.sendMessage(
-            this.webhookService.buildAlert(monitor),
-            channel
-          );
+          const sentWebhook = await this.webhookService.testMessage(channel);
           results.push({
             channelName: channel.name,
             channelType: channel.type,

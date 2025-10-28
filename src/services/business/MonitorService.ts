@@ -21,7 +21,13 @@ export interface IMonitorService {
     page: number,
     limit: number,
     type: MonitorType[]
-  ) => Promise<any[]>;
+  ) => Promise<{
+    count: number;
+    upCount: number;
+    downCount: number;
+    pausedCount: number;
+    monitors: any[];
+  }>;
   get: (teamId: string, monitorId: string) => Promise<IMonitor>;
   getEmbedChecks: (
     teamId: string,
@@ -81,20 +87,55 @@ class MonitorService implements IMonitorService {
   getAllEmbedChecks = async (
     teamId: string,
     page: number,
-    limit: number,
+    rowsPerPage: number,
     type: MonitorType[] = []
   ) => {
-    const skip = (page - 1) * limit;
+    const countResult = await Monitor.aggregate([
+      {
+        $match: {
+          teamId: new mongoose.Types.ObjectId(teamId),
+          type: { $in: type },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          upCount: { $sum: { $cond: [{ $eq: ["$status", "up"] }, 1, 0] } },
+          downCount: { $sum: { $cond: [{ $eq: ["$status", "down"] }, 1, 0] } },
+          pausedCount: {
+            $sum: { $cond: [{ $eq: ["$isActive", false] }, 1, 0] },
+          },
+        },
+      },
+    ]);
+
+    const counts = countResult[0] || {
+      total: 0,
+      upCount: 0,
+      downCount: 0,
+      pausedCount: 0,
+    };
+
+    const skip = page * rowsPerPage;
     let find = {};
     if (type.length > 0) find = { type: { $in: type } };
     find = { ...find, teamId };
-    const monitors = await Monitor.find(find).lean().skip(skip).limit(limit);
+
+    const monitors = await Monitor.find(find)
+      .lean()
+      .skip(skip)
+      .limit(rowsPerPage);
 
     if (type.length === 1 && type[0] === "pagespeed") {
       const monitorIds = monitors.map((m) => m._id);
 
       const checks = await Check.aggregate([
-        { $match: { "metadata.monitorId": { $in: monitorIds } } },
+        {
+          $match: {
+            "metadata.monitorId": { $in: monitorIds },
+          },
+        },
         { $sort: { createdAt: -1 } },
         {
           $group: {
@@ -113,7 +154,13 @@ class MonitorService implements IMonitorService {
         monitor.latestChecks = checksMap.get(monitor._id.toString()) || [];
       });
     }
-    return monitors;
+    return {
+      count: counts.total,
+      upCount: counts.upCount,
+      downCount: counts.downCount,
+      pausedCount: counts.pausedCount,
+      monitors,
+    };
   };
 
   get = async (teamId: string, monitorId: string) => {
