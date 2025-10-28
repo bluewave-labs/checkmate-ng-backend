@@ -10,6 +10,7 @@ import {
   monitorIdChecksQuerySchema,
   monitorPatchSchema,
 } from "@/validation/index.js";
+import { verify } from "node:crypto";
 
 class MonitorRoutes {
   private router;
@@ -45,6 +46,17 @@ class MonitorRoutes {
       verifyTeamPermission([PERMISSIONS.monitors.read]),
       validateQuery(monitorIdChecksQuerySchema),
       this.controller.getChecks
+    );
+
+    this.router.post(
+      "/:id/notifications/test",
+      verifyToken,
+      addUserContext,
+      verifyTeamPermission([
+        PERMISSIONS.monitors.read,
+        PERMISSIONS.notifications.read,
+      ]),
+      this.controller.testNotifications
     );
 
     this.router.patch(

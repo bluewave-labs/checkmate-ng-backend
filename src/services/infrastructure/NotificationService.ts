@@ -1,15 +1,27 @@
 import UserService from "../business/UserService.js";
-import { IMonitor, NotificationChannel } from "@/db/models/index.js";
+import { IMonitor, Monitor, NotificationChannel } from "@/db/models/index.js";
 import {
   EmailService,
   SlackService,
   DiscordService,
   WebhookService,
 } from "./NotificationServices/index.js";
+import ApiError from "@/utils/ApiError.js";
 
 const SERVICE_NAME = "NotificationServiceV2";
+
+export interface ITestResult {
+  channelName: string;
+  channelUrl: string;
+  channelType: string;
+  sent: boolean;
+}
 export interface INotificationService {
   handleNotifications: (monitor: IMonitor) => Promise<void>;
+  testNotificationChannels: (
+    monitorId: string,
+    teamId: string
+  ) => Promise<ITestResult[]>;
 }
 
 class NotificationService implements INotificationService {
@@ -73,6 +85,82 @@ class NotificationService implements INotificationService {
       }
     }
     return;
+  };
+
+  testNotificationChannels = async (monitorId: string, teamId: string) => {
+    const monitor = await Monitor.findOne({
+      _id: monitorId,
+      teamId: teamId,
+    });
+
+    if (!monitor) {
+      throw new ApiError("Monitor not found", 404);
+    }
+
+    const notificationIds = monitor.notificationChannels || [];
+    const notificationChannels = await NotificationChannel.find({
+      _id: { $in: notificationIds },
+    }).lean();
+
+    const results = [];
+
+    for (const channel of notificationChannels) {
+      // Implement sending logic based on channel.type and channel.config
+      let service;
+      switch (channel.type) {
+        case "email":
+          const sentEmail = await this.emailService.sendMessage(
+            this.emailService.buildAlert(monitor),
+            channel
+          );
+          results.push({
+            channelName: channel.name,
+            channelType: channel.type,
+            channelUrl: channel.config?.emailAddress || "N/A",
+            sent: sentEmail,
+          });
+          break;
+        case "slack":
+          const sentSlack = await this.slackService.sendMessage(
+            this.slackService.buildAlert(monitor),
+            channel
+          );
+          results.push({
+            channelName: channel.name,
+            channelType: channel.type,
+            channelUrl: channel.config?.url || "N/A",
+            sent: sentSlack,
+          });
+          break;
+        case "discord":
+          const sentDiscord = await this.discordService.sendMessage(
+            this.discordService.buildAlert(monitor),
+            channel
+          );
+          results.push({
+            channelName: channel.name,
+            channelType: channel.type,
+            channelUrl: channel.config?.url || "N/A",
+            sent: sentDiscord,
+          });
+          break;
+        case "webhook":
+          const sentWebhook = await this.webhookService.sendMessage(
+            this.webhookService.buildAlert(monitor),
+            channel
+          );
+          results.push({
+            channelName: channel.name,
+            channelType: channel.type,
+            channelUrl: channel.config?.url || "N/A",
+            sent: sentWebhook,
+          });
+          break;
+        default:
+          console.warn(`Unknown notification channel type: ${channel.type}`);
+      }
+    }
+    return results;
   };
 }
 

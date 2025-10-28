@@ -40,10 +40,7 @@ class EmailService implements IMessageService {
     };
   };
 
-  sendMessage = async (
-    alert: string | IAlert,
-    channel: INotificationChannel
-  ) => {
+  sendMessage = async (alert: IAlert, channel: INotificationChannel) => {
     try {
       const users = await this.userService.getAllUsers();
       const emails = users.map((u) => u.email).join(",");
@@ -64,8 +61,17 @@ class EmailService implements IMessageService {
     }
   };
 
-  testMessage = async () => {
-    return true;
+  testMessage = async (channel: INotificationChannel) => {
+    return this.sendMessage(
+      {
+        name: "This is a test",
+        url: "Test URL",
+        status: "Test status",
+        checkTime: new Date(),
+        alertTime: new Date(),
+      },
+      channel
+    );
   };
 }
 

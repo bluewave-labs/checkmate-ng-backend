@@ -14,8 +14,5 @@ export interface IMessageService {
     alert: IAlert,
     channel: INotificationChannel
   ) => Promise<boolean>;
-  testMessage: (
-    message: string,
-    channel: INotificationChannel
-  ) => Promise<boolean>;
+  testMessage: (channel: INotificationChannel) => Promise<boolean>;
 }

@@ -70,8 +70,17 @@ class DiscordService implements IMessageService {
     return true;
   };
 
-  testMessage = async () => {
-    return true;
+  testMessage = async (channel: INotificationChannel) => {
+    return this.sendMessage(
+      {
+        name: "This is a test",
+        url: "Test URL",
+        status: "Test status",
+        checkTime: new Date(),
+        alertTime: new Date(),
+      },
+      channel
+    );
   };
 }
 

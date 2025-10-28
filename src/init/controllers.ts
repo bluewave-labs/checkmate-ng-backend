@@ -24,7 +24,8 @@ export const initControllers = (services: any) => {
   );
   controllers.monitorController = new MonitorController(
     services.monitorService,
-    services.checkService
+    services.checkService,
+    services.notificationService
   );
   controllers.notificationChannelController = new NotificationChannelController(
     services.notificationChannelService

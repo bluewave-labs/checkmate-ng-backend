@@ -1,14 +1,38 @@
 import { Request, Response, NextFunction } from "express";
 import ApiError from "@/utils/ApiError.js";
-import MonitorService from "@/services/business/MonitorService.js";
 import { MonitorType } from "@/db/models/monitors/Monitor.js";
-import CheckService from "@/services/business/CheckService.js";
+import {
+  MonitorService,
+  CheckService,
+  NotificationService,
+} from "@/services/index.js";
+
+export interface IMonitorController {
+  create(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getAll(req: Request, res: Response, next: NextFunction): Promise<void>;
+  getChecks(req: Request, res: Response, next: NextFunction): Promise<void>;
+  toggleActive(req: Request, res: Response, next: NextFunction): Promise<void>;
+  get(req: Request, res: Response, next: NextFunction): Promise<void>;
+  update(req: Request, res: Response, next: NextFunction): Promise<void>;
+  delete(req: Request, res: Response, next: NextFunction): Promise<void>;
+  testNotifications(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>;
+}
 class MonitorController {
   private monitorService: MonitorService;
   private checkService: CheckService;
-  constructor(monitorService: MonitorService, checkService: CheckService) {
+  private notificationService: NotificationService;
+  constructor(
+    monitorService: MonitorService,
+    checkService: CheckService,
+    notificationService: NotificationService
+  ) {
     this.monitorService = monitorService;
     this.checkService = checkService;
+    this.notificationService = notificationService;
   }
 
   create = async (req: Request, res: Response, next: NextFunction) => {
@@ -248,6 +272,42 @@ class MonitorController {
       res.status(200).json({
         message: "Monitor deleted successfully",
       });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  testNotifications = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const tokenizedUser = req.user;
+      if (!tokenizedUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const teamId = tokenizedUser.currentTeamId;
+      if (!teamId) {
+        throw new ApiError("No team ID", 400);
+      }
+
+      const monitorId = req.params.id;
+      if (!monitorId) {
+        throw new ApiError("Monitor ID is required", 400);
+      }
+
+      const results = await this.notificationService.testNotificationChannels(
+        monitorId,
+        teamId
+      );
+      return res
+        .status(200)
+        .json({
+          message: "Notification test sent successfully",
+          data: results,
+        });
     } catch (error) {
       next(error);
     }
