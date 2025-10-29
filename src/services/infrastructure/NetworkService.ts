@@ -12,6 +12,9 @@ import type {
 import { MonitorType, MonitorStatus } from "@/db/models/monitors/Monitor.js";
 import ApiError from "@/utils/ApiError.js";
 import { config } from "@/config/index.js";
+import CacheableLookup from "cacheable-lookup";
+import http from "http";
+import https from "https";
 
 const SERVICE_NAME = "NetworkServiceV2";
 export interface INetworkService {
@@ -49,8 +52,17 @@ class NetworkService implements INetworkService {
   private NETWORK_ERROR: number;
   constructor() {
     this.SERVICE_NAME = SERVICE_NAME;
-    this.got = got;
     this.NETWORK_ERROR = 5000;
+
+    const cacheable = new CacheableLookup();
+
+    this.got = got.extend({
+      dnsCache: cacheable,
+      timeout: {
+        request: 30000,
+      },
+      retry: { limit: 1 },
+    });
   }
 
   private buildStatusResponse = <T>(

@@ -25,7 +25,8 @@ export interface ICheckService {
     teamId: string,
     monitorId: string,
     page: number,
-    rowsPerPage: number
+    rowsPerPage: number,
+    range: string
   ) => Promise<{ checks: ICheck[]; count: number }>;
 
   cleanupOrphanedChecks: () => Promise<boolean>;
