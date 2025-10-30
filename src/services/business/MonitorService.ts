@@ -127,7 +127,10 @@ class MonitorService implements IMonitorService {
       .skip(skip)
       .limit(rowsPerPage);
 
-    if (type.length === 1 && type[0] === "pagespeed") {
+    if (
+      type.length === 1 &&
+      (type[0] === "pagespeed" || type[0] === "infrastructure")
+    ) {
       const monitorIds = monitors.map((m) => m._id);
 
       const checks = await Check.aggregate([
@@ -315,11 +318,11 @@ class MonitorService implements IMonitorService {
         count: 1,
         avgResponseTime: 1,
         cpu: {
-          physicalCores: "$physicalCores",
-          logicalCores: "$logicalCores",
+          physical_core: "$physicalCores",
+          logical_core: "$logicalCores",
           frequency: "$frequency",
-          currentFrequency: "$currentFrequency",
-          temperatures: {
+          current_frequency: "$currentFrequency",
+          temperature: {
             $map: {
               input: {
                 $range: [0, { $size: { $arrayElemAt: ["$tempsArrays", 0] } }],
@@ -336,8 +339,8 @@ class MonitorService implements IMonitorService {
               },
             },
           },
-          freePercent: "$freePercent",
-          usedPercent: "$usedPercent",
+          free_percent: "$freePercent",
+          used_percent: "$usedPercent",
         },
         memory: {
           total_bytes: "$total_bytes",
@@ -345,7 +348,7 @@ class MonitorService implements IMonitorService {
           used_bytes: "$used_bytes",
           usage_percent: "$memory_usage_percent",
         },
-        disks: {
+        disk: {
           $map: {
             input: {
               $range: [0, { $size: { $arrayElemAt: ["$disksArray", 0] } }],
@@ -550,6 +553,7 @@ class MonitorService implements IMonitorService {
   ) {
     const allowedFields: (keyof IMonitor)[] = [
       "name",
+      "secret",
       "interval",
       "isActive",
       "n",

@@ -69,6 +69,13 @@ export const monitorSchema = z
         message: `Minimum interval for ${data.type} monitors is ${minInterval} ms`,
       });
     }
+
+    if (data.type === "infrastructure" && !data.secret) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Secret is required for infrastructure monitors`,
+      });
+    }
   });
 
 export const monitorPatchSchema = monitorSchema
@@ -78,10 +85,11 @@ export const monitorPatchSchema = monitorSchema
   .partial()
   .superRefine((data, ctx) => {
     const minIntervals: Record<string, number> = {
-      http: 10000,
-      https: 10000,
-      ping: 10000,
+      http: 60000,
+      https: 60000,
+      ping: 60000,
       pagespeed: 180000,
+      infrastructure: 60000,
     };
 
     if (!data.type || !data.interval) return;
