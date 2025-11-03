@@ -1,7 +1,14 @@
-import { IUserContext, IMaintenance, Maintenance } from "@/db/models/index.js";
+import {
+  IUserContext,
+  IMaintenance,
+  Maintenance,
+  MaintenanceRepeats,
+} from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
 
 const SERVICE_NAME = "MaintenanceServiceV2";
+const DAY_MS = 24 * 60 * 60 * 1000;
+const WEEK_MS = 7 * DAY_MS;
 
 export interface IMaintenanceService {
   create: (
@@ -138,8 +145,10 @@ class MaintenanceService implements IMaintenanceService {
 
     const activeMaintenances = await Maintenance.find({
       isActive: true,
-      startTime: { $lte: now },
-      endTime: { $gte: now },
+      $or: [
+        { repeat: { $in: MaintenanceRepeats } },
+        { startTime: { $lte: now }, endTime: { $gte: now } },
+      ],
     }).lean();
 
     // Reset cache
@@ -159,11 +168,37 @@ class MaintenanceService implements IMaintenanceService {
 
   isInMaintenance = async (monitorId: string) => {
     const now = Date.now();
+
     if (now - this.lastRefresh > this.CACHE_TTL_MS) {
       await this.refreshCache();
     }
+
     const maintenances = this.maintenanceCache.get(monitorId) || [];
-    return maintenances.length > 0;
+
+    for (const m of maintenances) {
+      const start = m.startTime.getTime();
+      const end = m.endTime.getTime();
+      const duration = end - start;
+
+      let isActiveNow = false;
+      if (!m.repeat || m.repeat === "no repeat") {
+        isActiveNow = start <= now && now <= end;
+      } else {
+        const elapsed = now - start;
+        if (elapsed >= 0) {
+          const period = m.repeat === "daily" ? DAY_MS : WEEK_MS;
+          const offset = elapsed % period;
+          if (offset < duration) {
+            isActiveNow = true;
+          }
+        }
+      }
+      if (isActiveNow) {
+        return true;
+      }
+    }
+
+    return false;
   };
 }
 

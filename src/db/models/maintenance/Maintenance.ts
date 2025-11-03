@@ -1,11 +1,13 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
-
+export const MaintenanceRepeats = ["no repeat", "daily", "weekly"] as const;
+export type MaintenanceRepeat = (typeof MaintenanceRepeats)[number];
 export interface IMaintenance extends Document {
   _id: Types.ObjectId;
   orgId: Types.ObjectId;
   teamId: Types.ObjectId;
   name: string;
   isActive: boolean;
+  repeat: MaintenanceRepeat;
   monitors: Types.ObjectId[];
   startTime: Date;
   endTime: Date;
@@ -21,6 +23,12 @@ const MaintenanceSchema = new Schema<IMaintenance>(
     teamId: { type: Schema.Types.ObjectId, ref: "Team", required: true },
     name: { type: String, required: true, trim: true },
     isActive: { type: Boolean, required: true, default: true },
+    repeat: {
+      type: String,
+      enum: MaintenanceRepeats,
+      required: false,
+      default: null,
+    },
     monitors: [
       {
         type: Schema.Types.ObjectId,
