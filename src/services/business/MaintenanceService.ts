@@ -1,4 +1,5 @@
 import {
+  Monitor,
   IUserContext,
   IMaintenance,
   Maintenance,
@@ -47,6 +48,20 @@ class MaintenanceService implements IMaintenanceService {
   }
 
   create = async (userContext: IUserContext, maintenanceData: IMaintenance) => {
+    // Make sure monitors belong to current team
+    const monitorIds = maintenanceData.monitors || [];
+    const count = await Monitor.countDocuments({
+      _id: { $in: monitorIds },
+      teamId: userContext.currentTeamId,
+    });
+
+    if (count !== monitorIds.length) {
+      throw new ApiError(
+        "One or more monitors do not belong to the current team",
+        403
+      );
+    }
+
     const maintenance = await Maintenance.create({
       ...maintenanceData,
       orgId: userContext.orgId,
@@ -99,9 +114,24 @@ class MaintenanceService implements IMaintenanceService {
     id: string,
     updateData: Partial<IMaintenance>
   ) => {
+    // Make sure monitors belong to current team
+    const monitorIds = updateData.monitors || [];
+    const count = await Monitor.countDocuments({
+      _id: { $in: monitorIds },
+      teamId: userContext.currentTeamId,
+    });
+
+    if (count !== monitorIds.length) {
+      throw new ApiError(
+        "One or more monitors do not belong to the current team",
+        403
+      );
+    }
+
     const allowedFields: (keyof IMaintenance)[] = [
       "name",
       "monitors",
+      "repeat",
       "startTime",
       "endTime",
       "isActive",

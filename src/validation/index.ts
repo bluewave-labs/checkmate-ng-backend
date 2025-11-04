@@ -384,3 +384,11 @@ export const checksStatusIdQuerySchema = z.object({
   }),
   range: z.string().min(1),
 });
+
+export const statusPageSchema = z.object({
+  name: z.string().min(1, "Status page name is required"),
+  url: z.string().min(1, "Status page URL is required"),
+  description: z.string().optional(),
+  isPublished: z.boolean(),
+  monitors: z.array(z.string()).optional().default([]),
+});

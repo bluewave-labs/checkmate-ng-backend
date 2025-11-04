@@ -10,6 +10,7 @@ import {
   RoleRoutes,
   TeamMemberRoutes,
   ChecksRoutes,
+  StatusPageRoutes,
 } from "@/routes/index.js";
 export const initRoutes = (controllers: any, app: Express) => {
   const authRoutes = new AuthRoutes(controllers.authController);
@@ -28,6 +29,9 @@ export const initRoutes = (controllers: any, app: Express) => {
     controllers.teamMemberController
   );
   const checksRoutes = new ChecksRoutes(controllers.checksController);
+  const statusPageRoutes = new StatusPageRoutes(
+    controllers.statusPageController
+  );
 
   app.use("/api/v1/auth", authRoutes.getRouter());
   app.use("/api/v1/invite", inviteRoutes.getRouter());
@@ -42,4 +46,5 @@ export const initRoutes = (controllers: any, app: Express) => {
   app.use("/api/v1/roles", roleRoutes.getRouter());
   app.use("/api/v1/team-members", teamMemberRoutes.getRouter());
   app.use("/api/v1/checks", checksRoutes.getRouter());
+  app.use("/api/v1/status-pages", statusPageRoutes.getRouter());
 };

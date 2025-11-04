@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 export const ChannelTypes = ["email", "slack", "discord", "webhook"] as const;
 export type ChannelType = (typeof ChannelTypes)[number];
 

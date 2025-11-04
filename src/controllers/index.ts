@@ -8,3 +8,4 @@ export { default as TeamController } from "./TeamController.js";
 export { default as RoleController } from "./RoleController.js";
 export { default as TeamMemberController } from "./TeamMemberController.js";
 export { default as ChecksController } from "./ChecksController.js";
+export { default as StatusPageController } from "./StatusPageController.js";

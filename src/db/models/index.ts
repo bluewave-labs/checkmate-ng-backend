@@ -46,3 +46,6 @@ export type { ITeam } from "./auth/Team.js";
 
 export { TeamMembership } from "./auth/TeamMembership.js";
 export type { ITeamMembership } from "./auth/TeamMembership.js";
+
+export { StatusPage } from "./status-page/StatusPage.js";
+export type { IStatusPage } from "./status-page/StatusPage.js";
