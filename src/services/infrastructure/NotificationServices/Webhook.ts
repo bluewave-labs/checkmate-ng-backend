@@ -2,8 +2,10 @@ import { IMonitor, INotificationChannel } from "@/db/models/index.js";
 import { IAlert, IMessageService } from "./IMessageService.js";
 import ApiError from "@/utils/ApiError.js";
 import got from "got";
+import { getChildLogger } from "@/logger/logger.js";
 
-const SERVICE_NAME = "WebhookServiceV2";
+const SERVICE_NAME = "WebhookService";
+const logger = getChildLogger(SERVICE_NAME);
 class WebhookService implements IMessageService {
   public SERVICE_NAME: string;
 
@@ -34,7 +36,7 @@ class WebhookService implements IMessageService {
     try {
       await got.post(notificationUrl, { json: { ...alert } });
     } catch (error) {
-      console.warn("Failed to send webhook notification:", error);
+      logger.warn("Failed to send webhook notification:", error);
       return false;
     }
 

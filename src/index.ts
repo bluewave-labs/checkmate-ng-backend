@@ -6,6 +6,9 @@ import cors from "cors";
 import { addUserContext } from "./middleware/AddUserContext.js";
 import { verifyToken } from "./middleware/VerifyToken.js";
 import { config } from "@/config/index.js";
+import logger from "@/logger/logger.js";
+const indexLogger = logger.child({ service: "index" });
+
 const createApp = async () => {
   await connectDatabase();
   const services = await initServices();
@@ -30,7 +33,7 @@ const createApp = async () => {
 
   const port = 52345;
   app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    indexLogger.info(`Server is running on http://localhost:${port}`);
   });
 };
 

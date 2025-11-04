@@ -7,8 +7,10 @@ import {
   WebhookService,
 } from "./NotificationServices/index.js";
 import ApiError from "@/utils/ApiError.js";
+import { getChildLogger } from "@/logger/logger.js";
 
-const SERVICE_NAME = "NotificationServiceV2";
+const SERVICE_NAME = "NotificationService";
+const logger = getChildLogger(SERVICE_NAME);
 
 export interface ITestResult {
   channelName: string;
@@ -81,7 +83,7 @@ class NotificationService implements INotificationService {
           );
           break;
         default:
-          console.warn(`Unknown notification channel type: ${channel.type}`);
+          logger.warn(`Unknown notification channel type: ${channel.type}`);
       }
     }
     return;
@@ -145,7 +147,7 @@ class NotificationService implements INotificationService {
           });
           break;
         default:
-          console.warn(`Unknown notification channel type: ${channel.type}`);
+          logger.warn(`Unknown notification channel type: ${channel.type}`);
       }
     }
     return results;

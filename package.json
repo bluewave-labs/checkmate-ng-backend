@@ -36,6 +36,7 @@
     "nodemailer": "7.0.9",
     "ping": "1.0.0",
     "super-simple-scheduler": "1.4.5",
+    "winston": "3.18.3",
     "zod": "4.1.12"
   }
 }

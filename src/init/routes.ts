@@ -12,6 +12,7 @@ import {
   ChecksRoutes,
   StatusPageRoutes,
 } from "@/routes/index.js";
+import { errorHandler } from "@/middleware/ErrorHandler.js";
 export const initRoutes = (controllers: any, app: Express) => {
   const authRoutes = new AuthRoutes(controllers.authController);
   const inviteRoutes = new InviteRoutes(controllers.inviteController);
@@ -47,4 +48,5 @@ export const initRoutes = (controllers: any, app: Express) => {
   app.use("/api/v1/team-members", teamMemberRoutes.getRouter());
   app.use("/api/v1/checks", checksRoutes.getRouter());
   app.use("/api/v1/status-pages", statusPageRoutes.getRouter());
+  app.use(errorHandler);
 };

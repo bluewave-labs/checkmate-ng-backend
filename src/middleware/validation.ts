@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { z, ZodObject, ZodRawShape, ZodError } from "zod";
+import { getChildLogger } from "@/logger/logger.js";
+
+const logger = getChildLogger("ValidationMiddleware");
 
 export const validateBody = <T extends ZodObject<ZodRawShape>>(schema: T) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -7,7 +10,7 @@ export const validateBody = <T extends ZodObject<ZodRawShape>>(schema: T) => {
       req.body = schema.strict().parse(req.body); // enforce strict keys
       next();
     } catch (err) {
-      console.error("Error validating request body:", err);
+      logger.error("Error validating request body:", err);
       if (err instanceof ZodError) {
         return res.status(400).json({ errors: z.treeifyError(err) });
       }
@@ -24,7 +27,7 @@ export const validateQuery = <T extends ZodObject<ZodRawShape>>(schema: T) => {
       req.validatedQuery = schema.strict().parse(req.query);
       next();
     } catch (err) {
-      console.error("Error validating request query:", err);
+      logger.error("Error validating request query:", err);
       if (err instanceof ZodError) {
         return res.status(400).json({ errors: z.treeifyError(err) });
       }

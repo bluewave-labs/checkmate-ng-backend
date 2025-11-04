@@ -2,7 +2,9 @@ import { IMonitor, INotificationChannel } from "@/db/models/index.js";
 import { IAlert, IMessageService } from "./IMessageService.js";
 import got from "got";
 
-const SERVICE_NAME = "SlackServiceV2";
+import { getChildLogger } from "@/logger/logger.js";
+const SERVICE_NAME = "SlackService";
+const logger = getChildLogger(SERVICE_NAME);
 class SlackService implements IMessageService {
   public SERVICE_NAME = SERVICE_NAME;
   constructor() {
@@ -107,7 +109,7 @@ class SlackService implements IMessageService {
       };
       await got.post(notificationUrl, { json: payload });
     } catch (error) {
-      console.warn("Error sending Slack message:", error);
+      logger.warn("Error sending Slack message:", error);
       return false;
     }
 

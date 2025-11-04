@@ -2,8 +2,10 @@ import { IJob } from "super-simple-scheduler/dist/job/job.js";
 import { Monitor, IMonitor } from "@/db/models/index.js";
 import Scheduler from "super-simple-scheduler";
 import { IJobGenerator } from "./JobGenerator.js";
+import { getChildLogger } from "@/logger/logger.js";
 
-const SERVICE_NAME = "JobQueueV2";
+const SERVICE_NAME = "JobQueue";
+const logger = getChildLogger(SERVICE_NAME);
 export interface IJobMetrics {
   jobs: number;
   activeJobs: number;
@@ -95,7 +97,7 @@ export default class JobQueue implements IJobQueue {
 
       return true;
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return false;
     }
   };
@@ -110,7 +112,7 @@ export default class JobQueue implements IJobQueue {
         data: monitor,
       });
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return false;
     }
   };
@@ -119,7 +121,7 @@ export default class JobQueue implements IJobQueue {
     try {
       return await this.scheduler?.pauseJob(monitor._id.toString());
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return false;
     }
   };
@@ -128,7 +130,7 @@ export default class JobQueue implements IJobQueue {
     try {
       return await this.scheduler.resumeJob(monitor._id.toString());
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return false;
     }
   };
@@ -140,7 +142,7 @@ export default class JobQueue implements IJobQueue {
         data: monitor,
       });
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return false;
     }
   };
@@ -150,7 +152,7 @@ export default class JobQueue implements IJobQueue {
       this.scheduler?.removeJob(monitor._id.toString());
       return true;
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return false;
     }
   };
@@ -204,7 +206,7 @@ export default class JobQueue implements IJobQueue {
       );
       return metrics;
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return null;
     }
   };
@@ -222,7 +224,7 @@ export default class JobQueue implements IJobQueue {
         };
       });
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return null;
     }
   };
@@ -231,7 +233,7 @@ export default class JobQueue implements IJobQueue {
     try {
       return await this.scheduler.flushJobs();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return false;
     }
   };
@@ -240,7 +242,7 @@ export default class JobQueue implements IJobQueue {
     try {
       return await this.scheduler.stop();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       return false;
     }
   };

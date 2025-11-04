@@ -1,6 +1,8 @@
 import { Monitor, MonitorStats } from "@/db/models/index.js";
+import { getChildLogger } from "@/logger/logger.js";
 
-const SERVICE_NAME = "MonitorStatsServiceV2";
+const SERVICE_NAME = "MonitorStatsService";
+const logger = getChildLogger(SERVICE_NAME);
 export interface IMonitorStatsService {
   cleanupOrphanedMonitorStats: () => Promise<boolean>;
 }
@@ -17,10 +19,10 @@ class MonitorStatsService implements IMonitorStatsService {
       const result = await MonitorStats.deleteMany({
         monitorId: { $nin: monitorIds },
       });
-      console.log(`Deleted ${result.deletedCount} orphaned MonitorStats.`);
+      logger.info(`Deleted ${result.deletedCount} orphaned MonitorStats.`);
       return true;
     } catch (error) {
-      console.error("Error cleaning up orphaned MonitorStats:", error);
+      logger.error("Error cleaning up orphaned MonitorStats:", error);
       return false;
     }
   }

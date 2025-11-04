@@ -8,8 +8,11 @@ import type {
 } from "../infrastructure/NetworkService.js";
 import mongoose from "mongoose";
 import ApiError from "@/utils/ApiError.js";
+import { getChildLogger } from "@/logger/logger.js";
 
 const SERVICE_NAME = "CheckServiceV2";
+const logger = getChildLogger(SERVICE_NAME);
+
 export interface ICheckService {
   buildCheck: (
     statusResponse: StatusResponse,
@@ -197,10 +200,10 @@ class CheckService implements ICheckService {
       const result = await Check.deleteMany({
         "metadata.monitorId": { $nin: monitorIds },
       });
-      console.log(`Deleted ${result.deletedCount} orphaned Checks.`);
+      logger.info(`Deleted ${result.deletedCount} orphaned Checks.`);
       return true;
     } catch (error) {
-      console.error("Error cleaning up orphaned Checks:", error);
+      logger.error("Error cleaning up orphaned Checks:", error);
       return false;
     }
   };

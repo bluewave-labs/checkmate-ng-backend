@@ -2,8 +2,9 @@ import { IMonitor, INotificationChannel } from "@/db/models/index.js";
 import { IAlert, IMessageService } from "./IMessageService.js";
 import got from "got";
 import ApiError from "@/utils/ApiError.js";
-
-const SERVICE_NAME = "DiscordServiceV2";
+import { getChildLogger } from "@/logger/logger.js";
+const SERVICE_NAME = "DiscordService";
+const logger = getChildLogger(SERVICE_NAME);
 class DiscordService implements IMessageService {
   public SERVICE_NAME: string;
   constructor() {
@@ -63,7 +64,7 @@ class DiscordService implements IMessageService {
       };
       await got.post(notificationUrl, { json: payload });
     } catch (error) {
-      console.warn("Failed to send Discord message", error);
+      logger.warn("Failed to send Discord message", error);
       return false;
     }
 
