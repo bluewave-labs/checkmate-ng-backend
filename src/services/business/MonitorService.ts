@@ -6,7 +6,7 @@ import { IJobQueue } from "@/services/infrastructure/JobQueue.js";
 import { MonitorWithChecksResponse } from "@/types/index.js";
 import { MonitorStatus, MonitorType } from "@/db/models/monitors/Monitor.js";
 
-const SERVICE_NAME = "MonitorServiceV2";
+const SERVICE_NAME = "MonitorService";
 
 export interface IMonitorService {
   create: (

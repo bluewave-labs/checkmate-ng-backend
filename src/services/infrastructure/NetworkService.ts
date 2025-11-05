@@ -16,7 +16,7 @@ import CacheableLookup from "cacheable-lookup";
 import http from "http";
 import https from "https";
 
-const SERVICE_NAME = "NetworkServiceV2";
+const SERVICE_NAME = "NetworkService";
 export interface INetworkService {
   requestHttp: (monitor: IMonitor) => Promise<StatusResponse>;
   requestInfrastructure: (monitor: IMonitor) => Promise<StatusResponse>;

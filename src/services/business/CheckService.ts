@@ -8,9 +8,9 @@ import type {
 } from "../infrastructure/NetworkService.js";
 import mongoose from "mongoose";
 import ApiError from "@/utils/ApiError.js";
-import { getChildLogger } from "@/logger/logger.js";
+import { getChildLogger } from "@/logger/Logger.js";
 
-const SERVICE_NAME = "CheckServiceV2";
+const SERVICE_NAME = "CheckService";
 const logger = getChildLogger(SERVICE_NAME);
 
 export interface ICheckService {

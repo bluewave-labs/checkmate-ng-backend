@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { getChildLogger } from "@/logger/logger.js";
+import { getChildLogger } from "@/logger/Logger.js";
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/saas";
 
 const RETRY_INTERVAL_MS = 2000; // wait 2 seconds between retries

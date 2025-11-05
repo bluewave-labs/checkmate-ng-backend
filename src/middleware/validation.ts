@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { z, ZodObject, ZodRawShape, ZodError } from "zod";
-import { getChildLogger } from "@/logger/logger.js";
+import { getChildLogger } from "@/logger/Logger.js";
 
 const logger = getChildLogger("ValidationMiddleware");
 

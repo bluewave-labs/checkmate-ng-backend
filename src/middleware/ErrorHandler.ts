@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { getChildLogger } from "@/logger/logger.js";
+import { getChildLogger } from "@/logger/Logger.js";
 import ApiError from "@/utils/ApiError.js";
 const logger = getChildLogger("ErrorHandler");
 

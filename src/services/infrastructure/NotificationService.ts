@@ -7,7 +7,7 @@ import {
   WebhookService,
 } from "./NotificationServices/index.js";
 import ApiError from "@/utils/ApiError.js";
-import { getChildLogger } from "@/logger/logger.js";
+import { getChildLogger } from "@/logger/Logger.js";
 
 const SERVICE_NAME = "NotificationService";
 const logger = getChildLogger(SERVICE_NAME);

@@ -10,6 +10,7 @@ import {
   TeamMemberController,
   ChecksController,
   StatusPageController,
+  DiagnosticController,
 } from "@/controllers/index.js";
 
 export const initControllers = (services: any) => {
@@ -44,6 +45,9 @@ export const initControllers = (services: any) => {
   controllers.checksController = new ChecksController(services.checkService);
   controllers.statusPageController = new StatusPageController(
     services.statusPageService
+  );
+  controllers.diagnosticController = new DiagnosticController(
+    services.diagnosticService
   );
   return controllers;
 };

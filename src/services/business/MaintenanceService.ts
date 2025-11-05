@@ -7,7 +7,7 @@ import {
 } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
 
-const SERVICE_NAME = "MaintenanceServiceV2";
+const SERVICE_NAME = "MaintenanceService";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEK_MS = 7 * DAY_MS;
 

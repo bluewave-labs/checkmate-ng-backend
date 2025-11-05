@@ -2,7 +2,7 @@ import { IMonitor, INotificationChannel } from "@/db/models/index.js";
 import { IAlert, IMessageService } from "./IMessageService.js";
 import ApiError from "@/utils/ApiError.js";
 import got from "got";
-import { getChildLogger } from "@/logger/logger.js";
+import { getChildLogger } from "@/logger/Logger.js";
 
 const SERVICE_NAME = "WebhookService";
 const logger = getChildLogger(SERVICE_NAME);

@@ -1,5 +1,5 @@
 import { Monitor, MonitorStats } from "@/db/models/index.js";
-import { getChildLogger } from "@/logger/logger.js";
+import { getChildLogger } from "@/logger/Logger.js";
 
 const SERVICE_NAME = "MonitorStatsService";
 const logger = getChildLogger(SERVICE_NAME);

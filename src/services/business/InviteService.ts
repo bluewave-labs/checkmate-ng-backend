@@ -10,7 +10,7 @@ import {
 } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
 
-const SERVICE_NAME = "InviteServiceV2";
+const SERVICE_NAME = "InviteService";
 export interface IInviteService {
   create: (
     userId: string,

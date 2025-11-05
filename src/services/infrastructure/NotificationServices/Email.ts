@@ -5,7 +5,7 @@ import { config } from "@/config/index.js";
 import UserService from "../../business/UserService.js";
 import ApiError from "@/utils/ApiError.js";
 
-const SERVICE_NAME = "EmailServiceV2";
+const SERVICE_NAME = "EmailService";
 class EmailService implements IMessageService {
   public SERVICE_NAME = SERVICE_NAME;
   private transporter: Transporter;

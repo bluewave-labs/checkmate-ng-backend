@@ -2,7 +2,7 @@ import { IJob } from "super-simple-scheduler/dist/job/job.js";
 import { Monitor, IMonitor } from "@/db/models/index.js";
 import Scheduler from "super-simple-scheduler";
 import { IJobGenerator } from "./JobGenerator.js";
-import { getChildLogger } from "@/logger/logger.js";
+import { getChildLogger } from "@/logger/Logger.js";
 
 const SERVICE_NAME = "JobQueue";
 const logger = getChildLogger(SERVICE_NAME);

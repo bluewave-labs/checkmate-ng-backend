@@ -7,7 +7,7 @@ import { INotificationService } from "./NotificationService.js";
 import { IMaintenanceService } from "../business/MaintenanceService.js";
 import ApiError from "@/utils/ApiError.js";
 
-const SERVICE_NAME = "JobGeneratorV2";
+const SERVICE_NAME = "JobGenerator";
 export interface IJobGenerator {
   generateJob: () => (Monitor: IMonitor) => Promise<void>;
   generateCleanupJob: () => () => Promise<void>;

@@ -8,7 +8,7 @@ import {
 } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
 
-const SERVICE_NAME = "NotificationChannelServiceV2";
+const SERVICE_NAME = "NotificationChannelService";
 
 export interface INotificationChannelService {
   create: (

@@ -1,6 +1,6 @@
 import { IUser, User } from "@/db/models/index.js";
 
-const SERVICE_NAME = "UserServiceV2";
+const SERVICE_NAME = "UserService";
 export interface IUserService {
   get(email: string): Promise<IUser>;
   getAllUsers(): Promise<IUser[]>;

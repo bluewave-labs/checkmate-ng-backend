@@ -11,3 +11,4 @@ export { default as RoleRoutes } from "./roles.js";
 export { default as TeamMemberRoutes } from "./teamMembers.js";
 export { default as ChecksRoutes } from "./checks.js";
 export { default as StatusPageRoutes } from "./statusPages.js";
+export { default as DiagnosticRoutes } from "./diagnostic.js";

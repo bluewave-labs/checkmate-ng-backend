@@ -22,6 +22,7 @@ import {
   RoleService,
   TeamMemberService,
   StatusPageService,
+  DiagnosticService,
 } from "@/services/index.js";
 
 export const initServices = async () => {
@@ -54,7 +55,7 @@ export const initServices = async () => {
   const roleService = new RoleService();
   const teamMemberService = new TeamMemberService();
   const statusPageService = new StatusPageService();
-
+  const diagnosticService = new DiagnosticService(jobQueue);
   const services = {
     checkService,
     inviteService,
@@ -78,6 +79,7 @@ export const initServices = async () => {
     roleService,
     teamMemberService,
     statusPageService,
+    diagnosticService,
   };
 
   Object.values(services).forEach((service) => {

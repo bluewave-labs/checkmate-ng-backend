@@ -2,7 +2,7 @@ import { IMonitor, IMonitorStats, MonitorStats } from "@/db/models/index.js";
 import { StatusResponse } from "./NetworkService.js";
 import ApiError from "@/utils/ApiError.js";
 
-const SERVICE_NAME = "StatusServiceV2";
+const SERVICE_NAME = "StatusService";
 const MAX_LATEST_CHECKS = 25;
 export interface IStatusService {
   updateMonitorStatus: (

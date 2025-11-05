@@ -1,6 +1,6 @@
 import { IJobQueue } from "@/services/infrastructure/JobQueue.js";
 
-const SERVICE_NAME = "QueueServiceV2";
+const SERVICE_NAME = "QueueService";
 
 class QueueService {
   public SERVICE_NAME: string;

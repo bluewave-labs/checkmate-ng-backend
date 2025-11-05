@@ -24,7 +24,7 @@ import mongoose, { Types } from "mongoose";
 import { IJobQueue } from "../infrastructure/JobQueue.js";
 import { hashPassword } from "@/utils/JWTUtils.js";
 
-const SERVICE_NAME = "AuthServiceV2";
+const SERVICE_NAME = "AuthService";
 
 export const PERMISSIONS = {
   users: {
@@ -88,6 +88,14 @@ export const PERMISSIONS = {
     read: "roles.read",
     update: "roles.update",
     delete: "roles.delete",
+  },
+
+  diagnostic: {
+    all: "diagnostic.*",
+    write: "diagnostic.write",
+    read: "diagnostic.read",
+    update: "diagnostic.update",
+    delete: "diagnostic.delete",
   },
 };
 
