@@ -34,9 +34,6 @@ const createApp = async () => {
   const port = 52345;
   app.listen(port, () => {
     indexLogger.info(`Server is running on http://localhost:${port}`);
-    indexLogger.warn("Warning log example");
-    indexLogger.error(new Error("wtf this is an error"));
-    indexLogger.debug("Debug log example");
   });
 };
 
