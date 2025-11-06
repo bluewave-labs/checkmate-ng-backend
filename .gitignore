@@ -7,9 +7,9 @@ yarn-error.log*
 .pnp.js
 .env
 .DS_Store
+/logs/
 
 # TypeScript
 /dist/
 /build/
 *.tsbuildinfo
-/logs/
