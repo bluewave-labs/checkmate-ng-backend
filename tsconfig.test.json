@@ -1,19 +1,17 @@
 {
   "compilerOptions": {
+    "composite": true,
     "rootDir": ".",
     "paths": {
       "@/*": ["./src/*"] // allows "@/db" -> "./src/db"
     },
+    "types": ["jest", "node"],
     "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
     "isolatedModules": true
   },
-  "references": [{ "path": "./tsconfig.test.json" }],
-
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "tests/**/*"]
 }

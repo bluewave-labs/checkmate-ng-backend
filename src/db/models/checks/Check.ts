@@ -4,7 +4,7 @@ import {
   MonitorTypes,
   MonitorStatus,
   MonitorStatuses,
-} from "../monitors/Monitor.js";
+} from "@/db/models/monitors/Monitor.js";
 import type { Response } from "got";
 export type GotTimings = Response["timings"];
 export interface ITimingPhases {
