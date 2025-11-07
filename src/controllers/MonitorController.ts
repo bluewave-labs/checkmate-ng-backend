@@ -159,8 +159,11 @@ class MonitorController {
         teamId,
         monitorId
       );
+
+      const paused = monitor.isActive ? "resumed" : "paused";
+
       res.status(200).json({
-        message: "Monitor paused/unpaused successfully",
+        message: `Monitor ${paused} successfully`,
         data: monitor,
       });
     } catch (error) {
