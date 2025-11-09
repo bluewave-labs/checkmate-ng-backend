@@ -4,6 +4,7 @@ import {
   MaintenanceService,
   MonitorStatsService,
   NotificationChannelService,
+  RecoveryService,
   UserService,
   DiscordService,
   EmailService,
@@ -31,6 +32,7 @@ export const initServices = async () => {
   const maintenanceService = new MaintenanceService();
   const monitorStatsService = new MonitorStatsService();
   const notificationChannelService = new NotificationChannelService();
+  const recoveryService = new RecoveryService();
   const userService = new UserService();
   const discordService = new DiscordService();
   const emailService = new EmailService(userService);
@@ -62,6 +64,7 @@ export const initServices = async () => {
     maintenanceService,
     monitorStatsService,
     notificationChannelService,
+    recoveryService,
     userService,
     discordService,
     emailService,

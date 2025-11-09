@@ -4,6 +4,7 @@ export { default as MaintenanceController } from "./MaintenanceController.js";
 export { default as MonitorController } from "./MonitorController.js";
 export { default as NotificationChannelController } from "./NotificationChannelController.js";
 export { default as QueueController } from "./QueueController.js";
+export { default as RecoveryController } from "./RecoveryController.js";
 export { default as TeamController } from "./TeamController.js";
 export { default as RoleController } from "./RoleController.js";
 export { default as TeamMemberController } from "./TeamMemberController.js";

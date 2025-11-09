@@ -20,6 +20,9 @@ export type {
   IUserContext,
 } from "./auth/User.js";
 
+export { RecoveryToken } from "./auth/RecoveryToken.js";
+export type { IRecoveryToken } from "./auth/RecoveryToken.js";
+
 export {
   NotificationChannel,
   ChannelTypes,

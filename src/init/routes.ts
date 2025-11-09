@@ -6,6 +6,7 @@ import {
   MonitorRoutes,
   NotificationChannelRoutes,
   QueueRoutes,
+  RecoveryRoutes,
   TeamRoutes,
   RoleRoutes,
   TeamMemberRoutes,
@@ -25,6 +26,7 @@ export const initRoutes = (controllers: any, app: Express) => {
     controllers.notificationChannelController
   );
   const queueRoutes = new QueueRoutes(controllers.queueController);
+  const recoveryRoutes = new RecoveryRoutes(controllers.recoveryController);
   const teamRoutes = new TeamRoutes(controllers.teamController);
   const roleRoutes = new RoleRoutes(controllers.roleController);
   const teamMemberRoutes = new TeamMemberRoutes(
@@ -47,6 +49,7 @@ export const initRoutes = (controllers: any, app: Express) => {
     notificationChannelRoutes.getRouter()
   );
   app.use("/api/v1/queue", queueRoutes.getRouter());
+  app.use("/api/v1/auth/recovery", recoveryRoutes.getRouter());
   app.use("/api/v1/teams", teamRoutes.getRouter());
   app.use("/api/v1/roles", roleRoutes.getRouter());
   app.use("/api/v1/team-members", teamMemberRoutes.getRouter());
