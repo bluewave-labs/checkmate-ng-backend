@@ -54,7 +54,7 @@ class StatusService implements IStatusService {
     // Update monitor status
     if (monitor.status === "initializing") {
       monitor.status = newStatus;
-      return [await monitor.save(), true];
+      return [await monitor.save(), monitor.latestChecks.length === 0];
     } else {
       const { n } = monitor;
       const latestChecks = monitor.latestChecks.slice(-n);

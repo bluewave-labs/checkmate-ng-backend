@@ -11,7 +11,6 @@ export default class MemoryTransport extends Transport {
   constructor(opts?: MemoryCacheTransportOptions) {
     super(opts);
     this.maxItems = opts?.maxItems || 500;
-    console.log(opts);
   }
 
   log = (info: any, callback: () => void) => {

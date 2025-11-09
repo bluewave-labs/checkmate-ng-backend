@@ -88,10 +88,13 @@ export default class JobQueue implements IJobQueue {
 
       const monitors = await Monitor.find();
       for (const monitor of monitors) {
-        const randomOffset = Math.floor(Math.random() * monitor.interval);
+        const randomOffset = 1000 + Math.random() * 1000;
 
-        setTimeout(() => {
-          this.addJob(monitor);
+        setTimeout(async () => {
+          const exists = await Monitor.exists({ _id: monitor._id });
+          if (exists) {
+            this.addJob(monitor);
+          }
         }, randomOffset);
       }
 

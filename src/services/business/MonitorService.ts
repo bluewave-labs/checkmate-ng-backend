@@ -591,8 +591,11 @@ class MonitorService implements IMonitorService {
     if (!monitor) {
       throw new ApiError("Monitor not found", 404);
     }
+    const deleted = await this.jobQueue.deleteJob(monitor);
+    if (!deleted) {
+      throw new ApiError("Failed to delete monitor job from queue", 500);
+    }
     await monitor.deleteOne();
-    await this.jobQueue.deleteJob(monitor);
     return true;
   }
 }
