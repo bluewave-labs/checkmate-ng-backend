@@ -12,6 +12,7 @@ export { default as RoleService } from "@/services/business/RoleService.js";
 export { default as TeamMemberService } from "@/services/business/TeamMemberServices.js";
 export { default as StatusPageService } from "@/services/business/StatusPageService.js";
 export { default as DiagnosticService } from "@/services/business/DiagnosticService.js";
+export { default as RecoveryService } from "@/services/business/RecoveryService.js";
 
 export { default as NetworkService } from "@/services/infrastructure/NetworkService.js";
 export { default as NotificationService } from "@/services/infrastructure/NotificationService.js";

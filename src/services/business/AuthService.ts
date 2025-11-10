@@ -2,13 +2,10 @@ import bcrypt from "bcryptjs";
 import {
   User,
   Org,
-  IOrgMembership,
   OrgMembership,
   Team,
   ITeam,
-  IUserContext,
   IUserReturnable,
-  ITeamMembership,
   TeamMembership,
   Role,
   IRole,
@@ -19,8 +16,8 @@ import {
   NotificationChannel,
   IInvite,
 } from "@/db/models/index.js";
+import { Types } from "mongoose";
 import ApiError from "@/utils/ApiError.js";
-import mongoose, { Types } from "mongoose";
 import { IJobQueue } from "../infrastructure/JobQueue.js";
 import { hashPassword } from "@/utils/JWTUtils.js";
 
@@ -134,6 +131,7 @@ export interface IAuthService {
   getTeams(teamIds: string[]): Promise<ITeam[]>;
   cleanup(): Promise<void>;
   cleanMonitors(): Promise<void>;
+  changePassword(userId: Types.ObjectId, newPassword: string): Promise<boolean>;
 }
 
 class AuthService implements IAuthService {
@@ -593,6 +591,19 @@ class AuthService implements IAuthService {
     await Monitor.deleteMany({});
     await Check.deleteMany({});
   }
+
+  changePassword = async (
+    userId: Types.ObjectId,
+    newPassword: string
+  ): Promise<boolean> => {
+    try {
+      const passwordHash = await hashPassword(newPassword);
+      await User.updateOne({ _id: userId }, { $set: { passwordHash } });
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  };
 }
 
 export default AuthService;
