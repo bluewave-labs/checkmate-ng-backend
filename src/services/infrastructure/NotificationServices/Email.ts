@@ -93,7 +93,7 @@ class EmailService implements IEmailService {
       });
       return true;
     } catch (error) {
-      return false;
+      throw error;
     }
   };
 }

@@ -48,11 +48,15 @@ class RecoveryController implements IRecoveryController {
         try {
           const recoveryToken = await this.recoveryService.create(user._id);
           // Don't wait for email to be sent
-          this.emailService.sendGeneric(
-            user.email,
-            "Password Recovery",
-            `Your recovery link is: ${config.ORIGIN}/recovery/${recoveryToken}`
-          );
+          this.emailService
+            .sendGeneric(
+              user.email,
+              "Password Recovery",
+              `Your recovery link is: ${config.ORIGIN}/recovery/${recoveryToken}`
+            )
+            .catch((error) => {
+              logger.error(error);
+            });
         } catch (error) {
           // These should not be propagated to the user
           logger.error(error);

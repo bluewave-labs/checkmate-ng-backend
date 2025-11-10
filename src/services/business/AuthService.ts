@@ -598,8 +598,11 @@ class AuthService implements IAuthService {
   ): Promise<boolean> => {
     try {
       const passwordHash = await hashPassword(newPassword);
-      await User.updateOne({ _id: userId }, { $set: { passwordHash } });
-      return true;
+      const result = await User.updateOne(
+        { _id: userId },
+        { $set: { passwordHash } }
+      );
+      return result.modifiedCount > 0;
     } catch (error) {
       throw error;
     }
