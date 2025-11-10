@@ -6,7 +6,16 @@ import UserService from "../../business/UserService.js";
 import ApiError from "@/utils/ApiError.js";
 
 const SERVICE_NAME = "EmailService";
-class EmailService implements IMessageService {
+
+export interface IEmailService extends IMessageService {
+  sendGeneric: (
+    to: string,
+    subject: string,
+    content: string
+  ) => Promise<boolean>;
+}
+
+class EmailService implements IEmailService {
   public SERVICE_NAME = SERVICE_NAME;
   private transporter: Transporter;
   private userService: UserService;
@@ -72,6 +81,20 @@ class EmailService implements IMessageService {
       },
       channel
     );
+  };
+
+  sendGeneric = async (to: string, subject: string, content: string) => {
+    try {
+      await this.transporter.sendMail({
+        from: `"Checkmate" <${config.SMTP_USER}>`,
+        to: to,
+        subject: subject,
+        text: content,
+      });
+      return true;
+    } catch (error) {
+      throw error;
+    }
   };
 }
 

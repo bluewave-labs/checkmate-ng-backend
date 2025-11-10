@@ -11,6 +11,7 @@ import {
   ChecksController,
   StatusPageController,
   DiagnosticController,
+  RecoveryController,
 } from "@/controllers/index.js";
 
 export const initControllers = (services: any) => {
@@ -48,6 +49,11 @@ export const initControllers = (services: any) => {
   );
   controllers.diagnosticController = new DiagnosticController(
     services.diagnosticService
+  );
+  controllers.recoveryController = new RecoveryController(
+    services.recoveryService,
+    services.authService,
+    services.emailService
   );
   return controllers;
 };

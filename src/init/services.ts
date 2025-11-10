@@ -23,6 +23,7 @@ import {
   TeamMemberService,
   StatusPageService,
   DiagnosticService,
+  RecoveryService,
 } from "@/services/index.js";
 
 export const initServices = async () => {
@@ -56,6 +57,7 @@ export const initServices = async () => {
   const teamMemberService = new TeamMemberService();
   const statusPageService = new StatusPageService();
   const diagnosticService = new DiagnosticService(jobQueue);
+  const recoveryService = new RecoveryService();
   const services = {
     checkService,
     inviteService,
@@ -80,6 +82,7 @@ export const initServices = async () => {
     teamMemberService,
     statusPageService,
     diagnosticService,
+    recoveryService,
   };
 
   Object.values(services).forEach((service) => {

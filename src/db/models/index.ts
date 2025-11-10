@@ -49,3 +49,6 @@ export type { ITeamMembership } from "./auth/TeamMembership.js";
 
 export { StatusPage } from "./status-page/StatusPage.js";
 export type { IStatusPage } from "./status-page/StatusPage.js";
+
+export { RecoveryToken } from "./recovery/RecoveryToken.js";
+export type { IRecoveryToken } from "./recovery/RecoveryToken.js";
