@@ -46,6 +46,13 @@ export interface IUser extends Document {
   updatedAt: Date;
 }
 
+export interface IUserProfile {
+  firstName?: string;
+  lastName?: string;
+  password?: string;
+  confirmPassword?: string;
+}
+
 const userSchema = new Schema<IUser>(
   {
     firstName: { type: String, required: true },

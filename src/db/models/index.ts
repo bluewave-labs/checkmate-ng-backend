@@ -18,6 +18,7 @@ export type {
   ITokenizedUser,
   IUserReturnable,
   IUserContext,
+  IUserProfile,
 } from "./auth/User.js";
 
 export {

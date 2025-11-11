@@ -13,6 +13,7 @@ import {
   StatusPageRoutes,
   DiagnosticRoutes,
   RecoveryRoutes,
+  ProfileRoutes,
 } from "@/routes/index.js";
 import { errorHandler } from "@/middleware/ErrorHandler.js";
 export const initRoutes = (controllers: any, app: Express) => {
@@ -40,6 +41,7 @@ export const initRoutes = (controllers: any, app: Express) => {
   );
 
   const recoveryRoutes = new RecoveryRoutes(controllers.recoveryController);
+  const profileROutes = new ProfileRoutes(controllers.profileController);
 
   app.use("/api/v1/auth", authRoutes.getRouter());
   app.use("/api/v1/invite", inviteRoutes.getRouter());
@@ -57,5 +59,6 @@ export const initRoutes = (controllers: any, app: Express) => {
   app.use("/api/v1/status-pages", statusPageRoutes.getRouter());
   app.use("/api/v1/diagnostic", diagnosticRoutes.getRouter());
   app.use("/api/v1/recovery", recoveryRoutes.getRouter());
+  app.use("/api/v1/profile", profileROutes.getRouter());
   app.use(errorHandler);
 };
