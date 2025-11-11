@@ -13,3 +13,4 @@ export { default as ChecksRoutes } from "./checks.js";
 export { default as StatusPageRoutes } from "./statusPages.js";
 export { default as DiagnosticRoutes } from "./diagnostic.js";
 export { default as RecoveryRoutes } from "./recovery.js";
+export { default as ProfileRoutes } from "./profile.js";
