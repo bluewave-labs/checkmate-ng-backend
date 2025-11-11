@@ -1,6 +1,7 @@
 import { IUser, IUserProfile, User } from "@/db/models/index.js";
 import ApiError from "@/utils/ApiError.js";
 import { hashPassword } from "@/utils/JWTUtils.js";
+import { object } from "joi";
 
 const SERVICE_NAME = "UserService";
 export interface IUserService {
@@ -24,15 +25,17 @@ class UserService implements IUserService {
 
   async update(userId: string, data: Partial<IUserProfile>): Promise<IUser> {
     let passwordHash = null;
-    if (data.password) passwordHash = await hashPassword(data.password);
-    {
+
+    const updateData: Record<string, any> = {};
+    if (data.firstName !== undefined) updateData.firstName = data.firstName;
+    if (data.lastName !== undefined) updateData.lastName = data.lastName;
+    if (data.password !== undefined) {
+      updateData.passwordHash = await hashPassword(data.password);
     }
 
-    const updateData = {
-      ...(data.firstName && { firstName: data.firstName }),
-      ...(data.lastName && { lastName: data.lastName }),
-      ...(passwordHash && { passwordHash }),
-    };
+    if (Object.keys(updateData).length === 0) {
+      throw new ApiError("No valid fields to update", 400);
+    }
 
     const updatedUser = await User.findOneAndUpdate(
       {

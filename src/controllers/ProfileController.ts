@@ -29,6 +29,7 @@ class ProfileController {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
+      // TODO convert to get by id
       const user = await this.userService.get(userContext.email);
       if (!user) {
         throw new ApiError("User not found", 404);
@@ -38,7 +39,9 @@ class ProfileController {
         message: "OK",
         data: this.parseUser(user),
       });
-    } catch (error) {}
+    } catch (error) {
+      next(error);
+    }
   };
 
   update = async (req: Request, res: Response, next: NextFunction) => {
