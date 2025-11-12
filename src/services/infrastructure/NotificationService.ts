@@ -162,7 +162,7 @@ class NotificationService implements INotificationService {
     const results: any[] = [];
 
     for (const channel of notificationChannels) {
-      this.testNotification(channel, results);
+      await this.testNotification(channel, results);
     }
     return results;
   };
