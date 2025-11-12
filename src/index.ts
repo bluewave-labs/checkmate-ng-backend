@@ -7,6 +7,7 @@ import { addUserContext } from "./middleware/AddUserContext.js";
 import { verifyToken } from "./middleware/VerifyToken.js";
 import { config } from "@/config/index.js";
 import { getChildLogger } from "@/logger/Logger.js";
+import ApiError from "./utils/ApiError.js";
 const indexLogger = getChildLogger("index");
 
 const createApp = async () => {
@@ -34,6 +35,7 @@ const createApp = async () => {
   const port = 52345;
   app.listen(port, () => {
     indexLogger.info(`Server is running on http://localhost:${port}`);
+    indexLogger.error(new ApiError("Test error logging", 500));
   });
 };
 

@@ -33,7 +33,8 @@ export const initControllers = (services: any) => {
     services.notificationService
   );
   controllers.notificationChannelController = new NotificationChannelController(
-    services.notificationChannelService
+    services.notificationChannelService,
+    services.notificationService
   );
   controllers.queueController = new QueueController(services.jobQueue);
 
