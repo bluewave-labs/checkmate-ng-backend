@@ -1,5 +1,10 @@
 import UserService from "../business/UserService.js";
-import { IMonitor, Monitor, NotificationChannel } from "@/db/models/index.js";
+import {
+  IMonitor,
+  Monitor,
+  NotificationChannel,
+  INotificationChannel,
+} from "@/db/models/index.js";
 import {
   EmailService,
   SlackService,
@@ -24,6 +29,9 @@ export interface INotificationService {
     monitorId: string,
     teamId: string
   ) => Promise<ITestResult[]>;
+  testNotificationChannel: (
+    notificationChannel: INotificationChannel
+  ) => Promise<Boolean>;
 }
 
 class NotificationService implements INotificationService {
@@ -89,6 +97,53 @@ class NotificationService implements INotificationService {
     return;
   };
 
+  private testNotification = async (
+    channel: INotificationChannel,
+    results: any[]
+  ) => {
+    switch (channel.type) {
+      case "email":
+        const sentEmail = await this.emailService.testMessage(channel);
+        results.push({
+          channelName: channel.name,
+          channelType: channel.type,
+          channelUrl: channel.config?.emailAddress || "N/A",
+          sent: sentEmail,
+        });
+        break;
+      case "slack":
+        const sentSlack = await this.slackService.testMessage(channel);
+        results.push({
+          channelName: channel.name,
+          channelType: channel.type,
+          channelUrl: channel.config?.url || "N/A",
+          sent: sentSlack,
+        });
+        break;
+      case "discord":
+        const sentDiscord = await this.discordService.testMessage(channel);
+        results.push({
+          channelName: channel.name,
+          channelType: channel.type,
+          channelUrl: channel.config?.url || "N/A",
+          sent: sentDiscord,
+        });
+        break;
+      case "webhook":
+        const sentWebhook = await this.webhookService.testMessage(channel);
+        results.push({
+          channelName: channel.name,
+          channelType: channel.type,
+          channelUrl: channel.config?.url || "N/A",
+          sent: sentWebhook,
+        });
+        break;
+      default:
+        logger.warn(`Unknown notification channel type: ${channel.type}`);
+    }
+    return results;
+  };
+
   testNotificationChannels = async (monitorId: string, teamId: string) => {
     const monitor = await Monitor.findOne({
       _id: monitorId,
@@ -104,53 +159,23 @@ class NotificationService implements INotificationService {
       _id: { $in: notificationIds },
     }).lean();
 
-    const results = [];
+    const results: any[] = [];
 
     for (const channel of notificationChannels) {
-      // Implement sending logic based on channel.type and channel.config
-      let service;
-      switch (channel.type) {
-        case "email":
-          const sentEmail = await this.emailService.testMessage(channel);
-          results.push({
-            channelName: channel.name,
-            channelType: channel.type,
-            channelUrl: channel.config?.emailAddress || "N/A",
-            sent: sentEmail,
-          });
-          break;
-        case "slack":
-          const sentSlack = await this.slackService.testMessage(channel);
-          results.push({
-            channelName: channel.name,
-            channelType: channel.type,
-            channelUrl: channel.config?.url || "N/A",
-            sent: sentSlack,
-          });
-          break;
-        case "discord":
-          const sentDiscord = await this.discordService.testMessage(channel);
-          results.push({
-            channelName: channel.name,
-            channelType: channel.type,
-            channelUrl: channel.config?.url || "N/A",
-            sent: sentDiscord,
-          });
-          break;
-        case "webhook":
-          const sentWebhook = await this.webhookService.testMessage(channel);
-          results.push({
-            channelName: channel.name,
-            channelType: channel.type,
-            channelUrl: channel.config?.url || "N/A",
-            sent: sentWebhook,
-          });
-          break;
-        default:
-          logger.warn(`Unknown notification channel type: ${channel.type}`);
-      }
+      this.testNotification(channel, results);
     }
     return results;
+  };
+
+  testNotificationChannel = async (
+    notificationChannel: INotificationChannel
+  ) => {
+    const result: any[] = [];
+    await this.testNotification(notificationChannel, result);
+    if (result.length > 0) {
+      return true;
+    }
+    return false;
   };
 }
 

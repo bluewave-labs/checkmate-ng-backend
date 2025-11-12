@@ -69,6 +69,14 @@ class NotificationChannelRoutes {
       verifyTeamPermission([PERMISSIONS.notifications.delete]),
       this.controller.delete
     );
+    this.router.post(
+      "/test",
+      verifyToken,
+      addUserContext,
+      validateBody(notificationChannelSchema),
+      verifyTeamPermission([PERMISSIONS.notifications.write]),
+      this.controller.test
+    );
   };
 
   getRouter() {
