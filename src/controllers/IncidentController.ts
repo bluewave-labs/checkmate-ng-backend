@@ -89,15 +89,15 @@ class IncidentsController implements IIncidentsController {
       if (!resolved) {
         throw new ApiError("Incident not found or could not be resolved", 500);
       }
-      const monitor = await this.monitorService.get(
-        teamId,
-        resolved.monitorId.toString()
-      );
 
-      this.notificationService
-        .handleNotifications(monitor, resolved)
+      // This should be best effort only, don't wait and don't fail
+      this.monitorService
+        .get(teamId, resolved.monitorId.toString())
+        .then((monitor) => {
+          this.notificationService.handleNotifications(monitor, resolved);
+        })
         .catch((error) => {
-          logger.error(error);
+          logger.warn(error);
         });
 
       return res

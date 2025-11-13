@@ -144,21 +144,16 @@ class IncidentService implements IIncidentService {
   ) => {
     const startDate = this.getStartDate(range);
     const match = {
-      teamId,
+      teamId: teamId,
+      ...(monitorId && { monitorId }),
+      createdAt: { $gte: startDate },
       ...(resolved !== undefined && { resolved }),
       ...(resolutionType !== undefined && { resolutionType }),
-      createdAt: { $gte: startDate },
     };
 
     const [count, incidents] = await Promise.all([
       Incident.countDocuments(match),
-      Incident.find({
-        teamId: new mongoose.Types.ObjectId(teamId),
-        ...(monitorId && { monitorId }),
-        createdAt: { $gte: startDate },
-        ...(resolved !== undefined && { resolved }),
-        ...(resolutionType !== undefined && { resolutionType }),
-      })
+      Incident.find(match)
         .populate("monitorId")
         .populate("resolvedBy")
         .sort({ createdAt: -1 })

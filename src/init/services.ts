@@ -26,7 +26,6 @@ import {
   RecoveryService,
   IncidentService,
 } from "@/services/index.js";
-import { no } from "zod/locales";
 
 export const initServices = async () => {
   const checkService = new CheckService();
@@ -42,7 +41,7 @@ export const initServices = async () => {
   const networkService = new NetworkService();
   const statusService = new StatusService();
   const notificationService = new NotificationService(userService);
-  const incidentService = new IncidentService(notificationService);
+  const incidentService = new IncidentService();
   const jobGenerator = new JobGenerator(
     networkService,
     checkService,

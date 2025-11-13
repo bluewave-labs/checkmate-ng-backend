@@ -73,11 +73,13 @@ class JobGenerator implements IJobGenerator {
             check
           );
 
+          // Best effort, don't wait, don't fail
           if (incident) {
-            this.notificationService.handleNotifications(
-              updatedMonitor,
-              incident
-            );
+            this.notificationService
+              .handleNotifications(updatedMonitor, incident)
+              .catch((error) => {
+                logger.warn(error);
+              });
           }
         }
         await this.statusService.updateMonitorStats(
