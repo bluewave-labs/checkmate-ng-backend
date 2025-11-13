@@ -14,6 +14,7 @@ import {
   DiagnosticRoutes,
   RecoveryRoutes,
   ProfileRoutes,
+  IncidentsRoutes,
 } from "@/routes/index.js";
 import { errorHandler } from "@/middleware/ErrorHandler.js";
 export const initRoutes = (controllers: any, app: Express) => {
@@ -42,6 +43,7 @@ export const initRoutes = (controllers: any, app: Express) => {
 
   const recoveryRoutes = new RecoveryRoutes(controllers.recoveryController);
   const profileRoutes = new ProfileRoutes(controllers.profileController);
+  const incidentsRoutes = new IncidentsRoutes(controllers.incidentsController);
 
   app.use("/api/v1/auth", authRoutes.getRouter());
   app.use("/api/v1/invite", inviteRoutes.getRouter());
@@ -60,5 +62,6 @@ export const initRoutes = (controllers: any, app: Express) => {
   app.use("/api/v1/diagnostic", diagnosticRoutes.getRouter());
   app.use("/api/v1/recovery", recoveryRoutes.getRouter());
   app.use("/api/v1/profile", profileRoutes.getRouter());
+  app.use("/api/v1/incidents", incidentsRoutes.getRouter());
   app.use(errorHandler);
 };

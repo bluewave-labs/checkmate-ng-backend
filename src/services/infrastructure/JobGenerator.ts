@@ -5,9 +5,12 @@ import { IMonitorStatsService } from "../business/MonitorStatsService.js";
 import { IStatusService } from "./StatusService.js";
 import { INotificationService } from "./NotificationService.js";
 import { IMaintenanceService } from "../business/MaintenanceService.js";
+import { IIncidentService } from "../business/IncidentService.js";
 import ApiError from "@/utils/ApiError.js";
+import { getChildLogger } from "@/logger/Logger.js";
 
 const SERVICE_NAME = "JobGenerator";
+const logger = getChildLogger(SERVICE_NAME);
 export interface IJobGenerator {
   generateJob: () => (Monitor: IMonitor) => Promise<void>;
   generateCleanupJob: () => () => Promise<void>;
@@ -21,6 +24,7 @@ class JobGenerator implements IJobGenerator {
   private statusService: IStatusService;
   private notificationService: INotificationService;
   private maintenanceService: IMaintenanceService;
+  private incidentService: IIncidentService;
 
   constructor(
     networkService: INetworkService,
@@ -28,6 +32,7 @@ class JobGenerator implements IJobGenerator {
     monitorStatsService: IMonitorStatsService,
     statusService: IStatusService,
     notificationService: INotificationService,
+    incidentService: IIncidentService,
     maintenanceService: IMaintenanceService
   ) {
     this.SERVICE_NAME = SERVICE_NAME;
@@ -36,6 +41,7 @@ class JobGenerator implements IJobGenerator {
     this.monitorStatsService = monitorStatsService;
     this.statusService = statusService;
     this.notificationService = notificationService;
+    this.incidentService = incidentService;
     this.maintenanceService = maintenanceService;
   }
 
@@ -62,7 +68,19 @@ class JobGenerator implements IJobGenerator {
           await this.statusService.updateMonitorStatus(monitor, status);
 
         if (statusChanged) {
-          await this.notificationService.handleNotifications(updatedMonitor);
+          const incident = await this.incidentService.handleStatusChange(
+            updatedMonitor,
+            check
+          );
+
+          // Best effort, don't wait, don't fail
+          if (incident) {
+            this.notificationService
+              .handleNotifications(updatedMonitor, incident)
+              .catch((error) => {
+                logger.warn(error);
+              });
+          }
         }
         await this.statusService.updateMonitorStats(
           updatedMonitor,

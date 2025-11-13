@@ -24,6 +24,7 @@ import {
   StatusPageService,
   DiagnosticService,
   RecoveryService,
+  IncidentService,
 } from "@/services/index.js";
 
 export const initServices = async () => {
@@ -40,12 +41,14 @@ export const initServices = async () => {
   const networkService = new NetworkService();
   const statusService = new StatusService();
   const notificationService = new NotificationService(userService);
+  const incidentService = new IncidentService();
   const jobGenerator = new JobGenerator(
     networkService,
     checkService,
     monitorStatsService,
     statusService,
     notificationService,
+    incidentService,
     maintenanceService
   );
   const jobQueue = await JobQueue.create(jobGenerator);
@@ -83,6 +86,7 @@ export const initServices = async () => {
     statusPageService,
     diagnosticService,
     recoveryService,
+    incidentService,
   };
 
   Object.values(services).forEach((service) => {

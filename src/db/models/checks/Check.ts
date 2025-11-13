@@ -126,11 +126,10 @@ export interface ICheck extends Document {
     teamId: Types.ObjectId;
     type: MonitorType;
   };
-  ack: boolean;
   status: MonitorStatus;
   httpStatusCode?: number;
   message: string;
-  responseTime?: number; // in ms
+  responseTime?: number;
   timings?: GotTimings;
   errorMessage?: string;
   ackAt?: Date;
@@ -162,7 +161,6 @@ const CheckSchema = new Schema<ICheck>(
         enum: MonitorTypes,
       },
     },
-    ack: { type: Boolean, required: true, default: false },
     status: {
       type: String,
       required: true,

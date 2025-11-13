@@ -4,6 +4,7 @@ import {
   Monitor,
   NotificationChannel,
   INotificationChannel,
+  IIncident,
 } from "@/db/models/index.js";
 import {
   EmailService,
@@ -24,7 +25,10 @@ export interface ITestResult {
   sent: boolean;
 }
 export interface INotificationService {
-  handleNotifications: (monitor: IMonitor) => Promise<void>;
+  handleNotifications: (
+    monitor: IMonitor,
+    incident: IIncident
+  ) => Promise<void>;
   testNotificationChannels: (
     monitorId: string,
     teamId: string
@@ -51,7 +55,7 @@ class NotificationService implements INotificationService {
     this.webhookService = new WebhookService();
   }
 
-  handleNotifications = async (monitor: IMonitor) => {
+  handleNotifications = async (monitor: IMonitor, incident: IIncident) => {
     const notificationIds = monitor.notificationChannels || [];
 
     if (notificationIds.length === 0) {
@@ -68,25 +72,25 @@ class NotificationService implements INotificationService {
       switch (channel.type) {
         case "email":
           await this.emailService.sendMessage(
-            this.emailService.buildAlert(monitor),
+            this.emailService.buildAlert(monitor, incident),
             channel
           );
           break;
         case "slack":
           await this.slackService.sendMessage(
-            this.slackService.buildAlert(monitor),
+            this.slackService.buildAlert(monitor, incident),
             channel
           );
           break;
         case "discord":
           await this.discordService.sendMessage(
-            this.discordService.buildAlert(monitor),
+            this.discordService.buildAlert(monitor, incident),
             channel
           );
           break;
         case "webhook":
           await this.webhookService.sendMessage(
-            this.webhookService.buildAlert(monitor),
+            this.webhookService.buildAlert(monitor, incident),
             channel
           );
           break;
