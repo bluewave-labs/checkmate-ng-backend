@@ -8,7 +8,7 @@ import { verifyOrgPermission } from "@/middleware/VerifyPermission.js";
 import { PERMISSIONS } from "@/services/business/AuthService.js";
 import { checksStatusIdQuerySchema } from "@/validation/index.js";
 
-class RoleRoutes {
+class CheckRoutes {
   private controller: ChecksController;
   private router: Router;
   constructor(checksController: ChecksController) {
@@ -33,4 +33,4 @@ class RoleRoutes {
   }
 }
 
-export default RoleRoutes;
+export default CheckRoutes;

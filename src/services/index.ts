@@ -13,6 +13,7 @@ export { default as TeamMemberService } from "@/services/business/TeamMemberServ
 export { default as StatusPageService } from "@/services/business/StatusPageService.js";
 export { default as DiagnosticService } from "@/services/business/DiagnosticService.js";
 export { default as RecoveryService } from "@/services/business/RecoveryService.js";
+export { default as IncidentService } from "@/services/business/IncidentService.js";
 
 export { default as NetworkService } from "@/services/infrastructure/NetworkService.js";
 export { default as NotificationService } from "@/services/infrastructure/NotificationService.js";

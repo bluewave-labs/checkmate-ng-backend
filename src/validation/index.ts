@@ -1,4 +1,8 @@
-import { ChannelTypes, MonitorStatuses } from "@/db/models/index.js";
+import {
+  ChannelTypes,
+  MonitorStatuses,
+  ResolutionTypes,
+} from "@/db/models/index.js";
 import { z } from "zod";
 import mongoose from "mongoose";
 
@@ -85,9 +89,9 @@ export const monitorPatchSchema = monitorSchema
   .partial()
   .superRefine((data, ctx) => {
     const minIntervals: Record<string, number> = {
-      http: 60000,
-      https: 60000,
-      ping: 60000,
+      http: 10000,
+      https: 10000,
+      ping: 10000,
       pagespeed: 180000,
       infrastructure: 60000,
     };
@@ -442,3 +446,82 @@ export const profileSchema = z
       path: ["confirmPassword"],
     }
   );
+
+export const getIncidentsQuerySchema = z.object({
+  resolutionType: z.enum(ResolutionTypes).optional(),
+  resolved: z
+    .string()
+    .optional()
+    .transform((val, ctx) => {
+      if (val === undefined) return undefined;
+      if (val === "true") return true;
+      if (val === "false") return false;
+      ctx.addIssue({
+        code: "custom",
+        message: "resolved must be 'true' or 'false'",
+      });
+      return z.NEVER;
+    }),
+  page: z
+    .string()
+    .optional()
+    .transform((val, ctx) => {
+      const num = Number(val);
+      if (!val) return;
+      if (Number.isNaN(num)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "page must be a number",
+        });
+        return z.NEVER;
+      }
+      if (num < 0) {
+        ctx.addIssue({
+          code: "custom",
+          message: "page must greater than 0",
+        });
+        return z.NEVER;
+      }
+      return num;
+    }),
+  rowsPerPage: z
+    .string()
+    .optional()
+    .transform((val, ctx) => {
+      if (!val) return;
+      const num = Number(val);
+      if (Number.isNaN(num)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "rowsPerPage must be a number",
+        });
+        return z.NEVER;
+      }
+      if (num < 0) {
+        ctx.addIssue({
+          code: "custom",
+          message: "rowsPerPage must be greater than 0",
+        });
+        return z.NEVER;
+      }
+      if (num > 100) {
+        ctx.addIssue({
+          code: "custom",
+          message: "rowsPerPage must be less than or equal to 100",
+        });
+        return z.NEVER;
+      }
+      return num;
+    }),
+  range: z.string().optional(),
+  monitorId: z
+    .string()
+    .refine((val) => mongoose.Types.ObjectId.isValid(val), {
+      message: "Invalid MongoDB ObjectId",
+    })
+    .optional(),
+});
+
+export const patchIncidentsBodySchema = z.object({
+  resolutionNote: z.string().max(200).optional(),
+});

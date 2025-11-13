@@ -1,4 +1,8 @@
-import { IMonitor, INotificationChannel } from "@/db/models/index.js";
+import {
+  IMonitor,
+  INotificationChannel,
+  IIncident,
+} from "@/db/models/index.js";
 import { IAlert, IMessageService } from "./IMessageService.js";
 import got from "got";
 
@@ -47,6 +51,34 @@ class SlackService implements IMessageService {
         type: "section",
         text: {
           type: "mrkdwn",
+          text: `resolved: ${alert.resolved ? "Yes" : "No"}`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `Resolution Type: ${alert.resolutionType || "N/A"}`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `Resolution note: ${alert.resolutionNote || "N/A"}`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*Checked at:* ${alert?.checkTime?.toISOString() || "N/A"}`,
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
           text: `*Checked at:* ${alert?.checkTime?.toISOString() || "N/A"}`,
         },
       },
@@ -81,7 +113,7 @@ class SlackService implements IMessageService {
     ];
   };
 
-  buildAlert = (monitor: IMonitor) => {
+  buildAlert = (monitor: IMonitor, incident: IIncident) => {
     const name = monitor?.name || "Unnamed monitor";
     const monitorStatus = monitor?.status || "unknown status";
     const url = monitor?.url || "no URL";
@@ -91,6 +123,10 @@ class SlackService implements IMessageService {
       name,
       url,
       status: monitorStatus,
+      resolved: incident.resolved,
+      resolutionType: incident.resolutionType,
+      resolvedBy: incident.resolvedBy?.toString(),
+      resolutionNote: incident.resolutionNote,
       checkTime,
       alertTime,
     };
@@ -124,6 +160,10 @@ class SlackService implements IMessageService {
         status: "Test status",
         checkTime: new Date(),
         alertTime: new Date(),
+        resolved: true,
+        resolutionType: "auto",
+        resolvedBy: "system",
+        resolutionNote: "This is a test message",
       },
       channel
     );

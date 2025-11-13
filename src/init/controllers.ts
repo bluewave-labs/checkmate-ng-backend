@@ -13,6 +13,7 @@ import {
   DiagnosticController,
   RecoveryController,
   ProfileController,
+  IncidentsController,
 } from "@/controllers/index.js";
 import { UserService } from "@/services/index.js";
 
@@ -58,8 +59,12 @@ export const initControllers = (services: any) => {
     services.authService,
     services.emailService
   );
-
   controllers.profileController = new ProfileController(services.userService);
+  controllers.incidentsController = new IncidentsController(
+    services.incidentService,
+    services.notificationService,
+    services.monitorService
+  );
 
   return controllers;
 };

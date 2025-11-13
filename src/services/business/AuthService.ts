@@ -94,6 +94,13 @@ export const PERMISSIONS = {
     update: "diagnostic.update",
     delete: "diagnostic.delete",
   },
+  incidents: {
+    all: "incidents.*",
+    write: "incidents.write",
+    read: "incidents.read",
+    update: "incidents.update",
+    delete: "incidents.delete",
+  },
 };
 
 export type RegisterData = {
@@ -257,6 +264,8 @@ class AuthService implements IAuthService {
             PERMISSIONS.roles.write,
             PERMISSIONS.invite.read,
             PERMISSIONS.invite.write,
+            PERMISSIONS.incidents.read,
+            PERMISSIONS.incidents.write,
           ],
         },
         {
@@ -266,6 +275,7 @@ class AuthService implements IAuthService {
             PERMISSIONS.monitors.all,
             PERMISSIONS.statusPages.all,
             PERMISSIONS.notifications.all,
+            PERMISSIONS.incidents.all,
           ],
           scope: "team",
         },
@@ -275,6 +285,8 @@ class AuthService implements IAuthService {
           permissions: [
             PERMISSIONS.monitors.read,
             PERMISSIONS.statusPages.read,
+            PERMISSIONS.notifications.read,
+            PERMISSIONS.incidents.read,
           ],
           scope: "team",
         },

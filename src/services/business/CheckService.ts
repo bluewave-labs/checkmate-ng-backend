@@ -122,7 +122,6 @@ class CheckService implements ICheckService {
       },
       status: statusResponse?.status,
       httpStatusCode: statusResponse?.code,
-      ack: false,
       message: statusResponse?.message,
       responseTime: statusResponse?.responseTime,
       timings: statusResponse?.timings,
